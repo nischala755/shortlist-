@@ -1,0 +1,22 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f7f7f4;
+  color: #20231f;
+}
+
+main {
+  max-width: 720px;
+  margin: 96px auto;
+  padding: 0 24px;
+}
+
+h1 {
+  max-width: 560px;
+  font-size: 48px;
+  line-height: 1.05;
+}
