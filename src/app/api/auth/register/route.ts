@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { hashPassword } from "@/features/auth/password";
+import { createEmailVerificationToken } from "@/features/auth/email-verification";
 import {
   RegistrationValidationError,
   validateRegistrationInput,
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
         email: true,
       },
     });
+
+    await createEmailVerificationToken(user.id, user.email);
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {

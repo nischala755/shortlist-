@@ -7,6 +7,9 @@ vi.mock("@/lib/db", () => ({ getPrisma: vi.fn() }));
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn() },
 }));
+vi.mock("@/features/auth/email-verification", () => ({
+  createEmailVerificationToken: vi.fn().mockResolvedValue(undefined),
+}));
 
 const mockedGetPrisma = vi.mocked(getPrisma);
 const mockedLogger = vi.mocked(logger);
