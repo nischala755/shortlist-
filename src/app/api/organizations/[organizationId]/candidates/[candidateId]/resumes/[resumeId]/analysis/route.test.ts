@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
 import { analyzeResumeWithMistral } from "@/features/resume-analysis/provider";
 import { getPrisma } from "@/lib/db";
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 vi.mock("@/features/auth/session", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/features/organizations/access", () => ({ canAccessOrganization: vi.fn() }));
@@ -41,5 +41,17 @@ describe("resume analysis", () => {
 
     expect(response.status).toBe(200);
     expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { resumeId: "r-1" }, create: expect.objectContaining({ requestedById: "u-1" }) }));
+  });
+
+  it("returns stored analysis only within the candidate scope", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "r@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "RECRUITER" }, allowed: true });
+    const findFirst = vi.fn().mockResolvedValue({ id: "a-1", provider: "mistral", model: "mistral-small-latest", analysisJson: { summary: "Engineer" }, createdAt: new Date() });
+    mockedGetPrisma.mockReturnValue({ resumeAnalysis: { findFirst } } as never);
+
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(200);
+    expect(findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { resumeId: "r-1", resume: { organizationId: "o-1", candidateId: "c-1" } } }));
   });
 });
