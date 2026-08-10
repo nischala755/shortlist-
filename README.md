@@ -2,7 +2,7 @@
 
 EvidenceHire is an evidence-driven recruitment and applicant tracking platform.
 
-The project is being developed in small, reviewable vertical slices for the DevFusion 4.O Developers Hackathon. The current milestone is foundation setup only.
+The project is being developed in small, reviewable vertical slices for the DevFusion 4.O Developers Hackathon. The current milestone includes the initial organization, user, and membership data model. Authentication and roles are intentionally not implemented yet.
 
 ## Local setup
 
@@ -29,4 +29,4 @@ npm run build
 npm run db:generate
 ```
 
-No business tables, recruitment, authentication, or AI behavior is included in this milestone.
+Recruitment, authentication, and AI behavior are not included in this milestone.
