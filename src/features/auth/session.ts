@@ -58,3 +58,15 @@ export async function getCurrentUser(request: Request) {
 
   return session.user;
 }
+
+export async function revokeSession(request: Request) {
+  const token = getSessionToken(request);
+
+  if (!token) {
+    return;
+  }
+
+  await getPrisma().session.deleteMany({
+    where: { tokenHash: hashSessionToken(token) },
+  });
+}
