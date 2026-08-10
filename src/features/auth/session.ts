@@ -37,7 +37,7 @@ export async function createSession(userId: string) {
   return { token, expiresAt };
 }
 
-export async function getCurrentUser(request: Request) {
+export async function getCurrentSession(request: Request) {
   const token = getSessionToken(request);
 
   if (!token) {
@@ -47,6 +47,7 @@ export async function getCurrentUser(request: Request) {
   const session = await getPrisma().session.findUnique({
     where: { tokenHash: hashSessionToken(token) },
     select: {
+      id: true,
       expiresAt: true,
       user: { select: { id: true, email: true } },
     },
@@ -56,7 +57,37 @@ export async function getCurrentUser(request: Request) {
     return null;
   }
 
-  return session.user;
+  await getPrisma().session.update({
+    where: { id: session.id },
+    data: { lastUsedAt: new Date() },
+  });
+
+  return session;
+}
+
+export async function getCurrentUser(request: Request) {
+  const session = await getCurrentSession(request);
+  return session?.user ?? null;
+}
+
+export async function listUserSessions(userId: string) {
+  return getPrisma().session.findMany({
+    where: { userId, expiresAt: { gt: new Date() } },
+    orderBy: { lastUsedAt: "desc" },
+    select: {
+      id: true,
+      createdAt: true,
+      lastUsedAt: true,
+      expiresAt: true,
+      userAgent: true,
+    },
+  });
+}
+
+export async function revokeUserSession(userId: string, sessionId: string) {
+  return getPrisma().session.deleteMany({
+    where: { id: sessionId, userId },
+  });
 }
 
 export async function revokeSession(request: Request) {
