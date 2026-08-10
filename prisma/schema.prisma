@@ -38,6 +38,12 @@ enum EvidenceSource {
   MANUAL
 }
 
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
 model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
@@ -49,6 +55,7 @@ model Organization {
   applications Application[]
   resumes     Resume[]
   candidateEvidence CandidateEvidence[]
+  interviews   Interview[]
 
   @@index([name])
 }
@@ -69,6 +76,8 @@ model User {
   uploadedResumes Resume[] @relation("ResumeUploadedBy")
   resumeAnalyses ResumeAnalysis[] @relation("ResumeAnalysisRequestedBy")
   createdEvidence CandidateEvidence[] @relation("EvidenceCreatedBy")
+  createdInterviews Interview[] @relation("InterviewCreatedBy")
+  assignedInterviews Interview[] @relation("InterviewAssignedTo")
   applications Application[] @relation("ApplicationCreatedBy")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
@@ -189,6 +198,7 @@ model Application {
   candidate      Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   createdBy      User             @relation("ApplicationCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   stageHistory   ApplicationStageHistory[]
+  interviews     Interview[]
 
   @@unique([jobId, candidateId])
   @@index([organizationId, currentStage])
@@ -227,6 +237,29 @@ model Resume {
   analysis       ResumeAnalysis?
 
   @@index([organizationId, candidateId])
+}
+
+model Interview {
+  id            String          @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  applicationId String          @db.Uuid
+  interviewerId String          @db.Uuid
+  createdById   String          @db.Uuid
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  location      String?
+  meetingUrl    String?
+  status        InterviewStatus @default(SCHEDULED)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewer   User            @relation("InterviewAssignedTo", fields: [interviewerId], references: [id], onDelete: Restrict)
+  createdBy     User            @relation("InterviewCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, scheduledStart])
+  @@index([interviewerId, scheduledStart])
+  @@index([applicationId, scheduledStart])
 }
 
 model CandidateEvidence {
