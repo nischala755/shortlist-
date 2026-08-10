@@ -6,14 +6,16 @@ export type OrganizationPermission =
   | "member:read"
   | "member:manage"
   | "job:read"
-  | "job:manage";
+  | "job:manage"
+  | "candidate:read"
+  | "candidate:manage";
 
 const rolePermissions: Record<Role, readonly OrganizationPermission[]> = {
   [Role.CANDIDATE]: [],
-  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
-  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
-  [Role.INTERVIEWER]: ["organization:read", "member:read", "job:read"],
-  [Role.ADMIN]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
+  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage"],
+  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage"],
+  [Role.INTERVIEWER]: ["organization:read", "member:read", "job:read", "candidate:read"],
+  [Role.ADMIN]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage"],
 };
 
 export function hasPermission(role: Role, permission: OrganizationPermission) {

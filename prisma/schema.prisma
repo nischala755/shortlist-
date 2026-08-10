@@ -28,6 +28,7 @@ model Organization {
   updatedAt   DateTime     @updatedAt
   memberships Membership[]
   jobs        Job[]
+  candidates  Candidate[]
 
   @@index([name])
 }
@@ -44,6 +45,7 @@ model User {
   verificationTokens EmailVerificationToken[]
   passwordResetTokens PasswordResetToken[]
   createdJobs Job[] @relation("JobCreatedBy")
+  createdCandidates Candidate[] @relation("CandidateCreatedBy")
 }
 
 model Membership {
@@ -112,6 +114,22 @@ model Job {
 
   @@index([organizationId, status])
   @@index([createdById])
+}
+
+model Candidate {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  createdById    String   @db.Uuid
+  name           String
+  email          String
+  phone          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User     @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, email])
+  @@index([organizationId, name])
 }
 
 model JobRequirement {
