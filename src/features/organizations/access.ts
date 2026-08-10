@@ -4,14 +4,16 @@ import { Role } from "@/generated/prisma/client";
 export type OrganizationPermission =
   | "organization:read"
   | "member:read"
-  | "member:manage";
+  | "member:manage"
+  | "job:read"
+  | "job:manage";
 
 const rolePermissions: Record<Role, readonly OrganizationPermission[]> = {
   [Role.CANDIDATE]: [],
-  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage"],
-  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage"],
-  [Role.INTERVIEWER]: ["organization:read", "member:read"],
-  [Role.ADMIN]: ["organization:read", "member:read", "member:manage"],
+  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
+  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
+  [Role.INTERVIEWER]: ["organization:read", "member:read", "job:read"],
+  [Role.ADMIN]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage"],
 };
 
 export function hasPermission(role: Role, permission: OrganizationPermission) {
