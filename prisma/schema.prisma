@@ -58,6 +58,7 @@ model User {
   createdJobs Job[] @relation("JobCreatedBy")
   createdCandidates Candidate[] @relation("CandidateCreatedBy")
   applications Application[] @relation("ApplicationCreatedBy")
+  applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
 
 model Membership {
@@ -172,8 +173,22 @@ model Application {
   job            Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
   candidate      Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   createdBy      User             @relation("ApplicationCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  stageHistory   ApplicationStageHistory[]
 
   @@unique([jobId, candidateId])
   @@index([organizationId, currentStage])
   @@index([candidateId])
+}
+
+model ApplicationStageHistory {
+  id            String           @id @default(uuid()) @db.Uuid
+  applicationId String           @db.Uuid
+  changedById   String           @db.Uuid
+  fromStage     ApplicationStage?
+  toStage       ApplicationStage
+  changedAt     DateTime         @default(now())
+  application   Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy     User             @relation("ApplicationStageChangedBy", fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([applicationId, changedAt])
 }

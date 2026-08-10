@@ -1,5 +1,27 @@
 export type ApplicationInput = { jobId: string; candidateId: string };
 
+export const applicationStages = [
+  "APPLIED",
+  "SCREENING",
+  "SHORTLISTED",
+  "ASSESSMENT",
+  "INTERVIEW",
+  "OFFER",
+  "HIRED",
+] as const;
+
+export type ApplicationStageValue = (typeof applicationStages)[number];
+
+const allowedTransitions: Record<ApplicationStageValue, readonly ApplicationStageValue[]> = {
+  APPLIED: ["SCREENING"],
+  SCREENING: ["SHORTLISTED"],
+  SHORTLISTED: ["ASSESSMENT", "INTERVIEW"],
+  ASSESSMENT: ["INTERVIEW"],
+  INTERVIEW: ["OFFER"],
+  OFFER: ["HIRED"],
+  HIRED: [],
+};
+
 export class ApplicationValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -21,4 +43,19 @@ export function validateApplicationInput(input: unknown): ApplicationInput {
   }
 
   return { jobId, candidateId };
+}
+
+export function validateApplicationStage(value: unknown): ApplicationStageValue {
+  if (typeof value === "string" && applicationStages.includes(value as ApplicationStageValue)) {
+    return value as ApplicationStageValue;
+  }
+
+  throw new ApplicationValidationError("A valid application stage is required");
+}
+
+export function canTransitionApplicationStage(
+  current: ApplicationStageValue,
+  next: ApplicationStageValue,
+) {
+  return allowedTransitions[current].includes(next);
 }

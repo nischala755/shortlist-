@@ -25,6 +25,7 @@ describe("/api/organizations/:organizationId/applications", () => {
       job: { findFirst: vi.fn().mockResolvedValue({ id: "job-1" }) },
       candidate: { findFirst: vi.fn().mockResolvedValue({ id: "candidate-1" }) },
       application: { create: vi.fn().mockResolvedValue({ id: "application-1", currentStage: "APPLIED" }) },
+      applicationStageHistory: { create: vi.fn().mockResolvedValue({}) },
     };
     mockedGetPrisma.mockReturnValue({ $transaction: vi.fn(async (callback) => callback(transaction)) } as never);
 
@@ -41,6 +42,7 @@ describe("/api/organizations/:organizationId/applications", () => {
       job: { findFirst: vi.fn().mockResolvedValue(null) },
       candidate: { findFirst: vi.fn() },
       application: { create: vi.fn() },
+      applicationStageHistory: { create: vi.fn() },
     };
     mockedGetPrisma.mockReturnValue({ $transaction: vi.fn(async (callback) => callback(transaction)) } as never);
 

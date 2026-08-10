@@ -49,10 +49,16 @@ export async function POST(request: Request, context: { params: Promise<{ organi
       const candidate = await transaction.candidate.findFirst({ where: { id: input.candidateId, organizationId }, select: { id: true } });
       if (!job || !candidate) return null;
 
-      return transaction.application.create({
+      const application = await transaction.application.create({
         data: { organizationId, jobId: input.jobId, candidateId: input.candidateId, createdById: user.id },
         select: { id: true, currentStage: true, createdAt: true, updatedAt: true },
       });
+
+      await transaction.applicationStageHistory.create({
+        data: { applicationId: application.id, changedById: user.id, toStage: "APPLIED" },
+      });
+
+      return application;
     });
 
     if (!application) return NextResponse.json({ error: "Job or candidate not found" }, { status: 404 });
