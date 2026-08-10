@@ -27,6 +27,7 @@ model User {
   memberships Membership[]
   sessions     Session[]
   verificationTokens EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Membership {
@@ -56,6 +57,18 @@ model Session {
 }
 
 model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   tokenHash String   @unique
