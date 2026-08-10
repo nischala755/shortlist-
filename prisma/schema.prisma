@@ -78,6 +78,7 @@ model User {
   createdEvidence CandidateEvidence[] @relation("EvidenceCreatedBy")
   createdInterviews Interview[] @relation("InterviewCreatedBy")
   assignedInterviews Interview[] @relation("InterviewAssignedTo")
+  submittedScorecards InterviewScorecard[] @relation("ScorecardSubmittedBy")
   applications Application[] @relation("ApplicationCreatedBy")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
@@ -256,10 +257,28 @@ model Interview {
   application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   interviewer   User            @relation("InterviewAssignedTo", fields: [interviewerId], references: [id], onDelete: Restrict)
   createdBy     User            @relation("InterviewCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  scorecard     InterviewScorecard?
 
   @@index([organizationId, scheduledStart])
   @@index([interviewerId, scheduledStart])
   @@index([applicationId, scheduledStart])
+}
+
+model InterviewScorecard {
+  id            String    @id @default(uuid()) @db.Uuid
+  interviewId   String    @unique @db.Uuid
+  submittedById String    @db.Uuid
+  criteriaJson  Json
+  overallRating Int
+  strengths     String?   @db.Text
+  concerns      String?   @db.Text
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  interview     Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  submittedBy   User      @relation("ScorecardSubmittedBy", fields: [submittedById], references: [id], onDelete: Restrict)
+
+  @@index([submittedById])
 }
 
 model CandidateEvidence {
