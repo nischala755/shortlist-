@@ -206,6 +206,8 @@ model Resume {
   mimeType       String
   sizeBytes      Int
   sha256         String
+  parsedText     String?  @db.Text
+  parsedAt       DateTime?
   createdAt      DateTime @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   candidate      Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)

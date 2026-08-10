@@ -25,7 +25,7 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     const resumes = await getPrisma().resume.findMany({
       where: { organizationId, candidateId },
       orderBy: { createdAt: "desc" },
-      select: { id: true, originalName: true, mimeType: true, sizeBytes: true, sha256: true, createdAt: true },
+      select: { id: true, originalName: true, mimeType: true, sizeBytes: true, sha256: true, parsedAt: true, createdAt: true },
     });
     return NextResponse.json({ resumes });
   } catch (error) {

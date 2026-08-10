@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const maxResumeSizeBytes = 10 * 1024 * 1024;
@@ -50,4 +50,14 @@ export async function saveResume(file: File) {
 
 export async function removeResume(storageKey: string) {
   await rm(path.join(storageRoot(), storageKey), { force: true });
+}
+
+export async function readResume(storageKey: string) {
+  const root = storageRoot();
+  const filePath = path.resolve(root, storageKey);
+  const relativePath = path.relative(root, filePath);
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    throw new ResumeValidationError("Resume storage key is invalid");
+  }
+  return readFile(filePath);
 }
