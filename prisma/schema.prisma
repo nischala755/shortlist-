@@ -31,6 +31,13 @@ enum ApplicationStage {
   HIRED
 }
 
+enum EvidenceSource {
+  RESUME
+  INTERVIEW
+  ASSESSMENT
+  MANUAL
+}
+
 model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
@@ -41,6 +48,7 @@ model Organization {
   candidates  Candidate[]
   applications Application[]
   resumes     Resume[]
+  candidateEvidence CandidateEvidence[]
 
   @@index([name])
 }
@@ -60,6 +68,7 @@ model User {
   createdCandidates Candidate[] @relation("CandidateCreatedBy")
   uploadedResumes Resume[] @relation("ResumeUploadedBy")
   resumeAnalyses ResumeAnalysis[] @relation("ResumeAnalysisRequestedBy")
+  createdEvidence CandidateEvidence[] @relation("EvidenceCreatedBy")
   applications Application[] @relation("ApplicationCreatedBy")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
@@ -146,6 +155,7 @@ model Candidate {
   createdBy      User     @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   applications   Application[]
   resumes        Resume[]
+  evidence       CandidateEvidence[]
 
   @@unique([organizationId, email])
   @@index([organizationId, name])
@@ -159,6 +169,7 @@ model JobRequirement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  evidence    CandidateEvidence[]
 
   @@unique([jobId, title])
   @@index([jobId])
@@ -216,6 +227,27 @@ model Resume {
   analysis       ResumeAnalysis?
 
   @@index([organizationId, candidateId])
+}
+
+model CandidateEvidence {
+  id                String         @id @default(uuid()) @db.Uuid
+  organizationId    String         @db.Uuid
+  candidateId       String         @db.Uuid
+  createdById       String         @db.Uuid
+  jobRequirementId  String?        @db.Uuid
+  title             String
+  details           String         @db.Text
+  sourceType        EvidenceSource
+  sourceReference   String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  candidate         Candidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  createdBy         User            @relation("EvidenceCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  jobRequirement    JobRequirement? @relation(fields: [jobRequirementId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, candidateId, createdAt])
+  @@index([jobRequirementId])
 }
 
 model ResumeAnalysis {
