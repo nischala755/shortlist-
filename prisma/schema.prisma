@@ -59,6 +59,7 @@ model User {
   createdJobs Job[] @relation("JobCreatedBy")
   createdCandidates Candidate[] @relation("CandidateCreatedBy")
   uploadedResumes Resume[] @relation("ResumeUploadedBy")
+  resumeAnalyses ResumeAnalysis[] @relation("ResumeAnalysisRequestedBy")
   applications Application[] @relation("ApplicationCreatedBy")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
@@ -212,6 +213,21 @@ model Resume {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   candidate      Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   uploadedBy     User     @relation("ResumeUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+  analysis       ResumeAnalysis?
 
   @@index([organizationId, candidateId])
+}
+
+model ResumeAnalysis {
+  id            String   @id @default(uuid()) @db.Uuid
+  resumeId      String   @unique @db.Uuid
+  requestedById String   @db.Uuid
+  provider      String
+  model         String
+  analysisJson  Json
+  createdAt     DateTime @default(now())
+  resume        Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  requestedBy   User     @relation("ResumeAnalysisRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([requestedById])
 }
