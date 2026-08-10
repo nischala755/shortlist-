@@ -7,3 +7,4 @@ coverage/
 *.log
 *.tsbuildinfo
 src/generated/prisma/
+storage/
