@@ -21,6 +21,16 @@ enum JobStatus {
   CLOSED
 }
 
+enum ApplicationStage {
+  APPLIED
+  SCREENING
+  SHORTLISTED
+  ASSESSMENT
+  INTERVIEW
+  OFFER
+  HIRED
+}
+
 model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
@@ -29,6 +39,7 @@ model Organization {
   memberships Membership[]
   jobs        Job[]
   candidates  Candidate[]
+  applications Application[]
 
   @@index([name])
 }
@@ -46,6 +57,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   createdJobs Job[] @relation("JobCreatedBy")
   createdCandidates Candidate[] @relation("CandidateCreatedBy")
+  applications Application[] @relation("ApplicationCreatedBy")
 }
 
 model Membership {
@@ -111,6 +123,7 @@ model Job {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy      User      @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   requirements   JobRequirement[]
+  applications   Application[]
 
   @@index([organizationId, status])
   @@index([createdById])
@@ -127,6 +140,7 @@ model Candidate {
   updatedAt      DateTime @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy      User     @relation("CandidateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  applications   Application[]
 
   @@unique([organizationId, email])
   @@index([organizationId, name])
@@ -143,4 +157,23 @@ model JobRequirement {
 
   @@unique([jobId, title])
   @@index([jobId])
+}
+
+model Application {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  jobId          String           @db.Uuid
+  candidateId    String           @db.Uuid
+  createdById    String           @db.Uuid
+  currentStage   ApplicationStage @default(APPLIED)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  job            Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate      Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  createdBy      User             @relation("ApplicationCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([jobId, candidateId])
+  @@index([organizationId, currentStage])
+  @@index([candidateId])
 }
