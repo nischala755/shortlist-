@@ -1,19 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/features/auth/session";
 import {
-  getOrganizationForUser,
+  canAccessOrganization,
   listOrganizationMembers,
 } from "@/features/organizations/access";
 import { GET } from "./route";
 
 vi.mock("@/features/auth/session", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/features/organizations/access", () => ({
+  canAccessOrganization: vi.fn(),
   getOrganizationForUser: vi.fn(),
   listOrganizationMembers: vi.fn(),
 }));
 
 const mockedGetCurrentUser = vi.mocked(getCurrentUser);
-const mockedGetOrganizationForUser = vi.mocked(getOrganizationForUser);
+const mockedCanAccessOrganization = vi.mocked(canAccessOrganization);
 const mockedListOrganizationMembers = vi.mocked(listOrganizationMembers);
 
 describe("GET /api/organizations/:organizationId/members", () => {
@@ -21,10 +22,9 @@ describe("GET /api/organizations/:organizationId/members", () => {
 
   it("returns members for an accessible organization", async () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "user-1", email: "a@example.com" });
-    mockedGetOrganizationForUser.mockResolvedValue({
-      id: "org-1",
-      name: "Acme",
-      createdAt: new Date("2026-08-10T00:00:00.000Z"),
+    mockedCanAccessOrganization.mockResolvedValue({
+      membership: { id: "membership-1", role: "ADMIN" },
+      allowed: true,
     });
     mockedListOrganizationMembers.mockResolvedValue([]);
 
@@ -38,7 +38,7 @@ describe("GET /api/organizations/:organizationId/members", () => {
 
   it("denies members from an inaccessible organization", async () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "user-1", email: "a@example.com" });
-    mockedGetOrganizationForUser.mockResolvedValue(null);
+    mockedCanAccessOrganization.mockResolvedValue({ membership: null, allowed: false });
 
     const response = await GET(new Request("http://localhost"), {
       params: Promise.resolve({ organizationId: "other-org" }),

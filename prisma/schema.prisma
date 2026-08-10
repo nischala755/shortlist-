@@ -7,6 +7,14 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CANDIDATE
+  RECRUITER
+  HIRING_MANAGER
+  INTERVIEWER
+  ADMIN
+}
+
 model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
@@ -34,6 +42,7 @@ model Membership {
   id             String       @id @default(uuid()) @db.Uuid
   organizationId String       @db.Uuid
   userId         String       @db.Uuid
+  role           Role         @default(CANDIDATE)
   createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)

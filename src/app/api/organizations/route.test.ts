@@ -49,7 +49,7 @@ describe("/api/organizations", () => {
 
     expect(response.status).toBe(201);
     expect(transaction.membership.create).toHaveBeenCalledWith({
-      data: { organizationId: "org-1", userId: "user-1" },
+      data: { organizationId: "org-1", userId: "user-1", role: "ADMIN" },
     });
   });
 

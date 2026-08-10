@@ -64,7 +64,11 @@ export async function POST(request: Request) {
       });
 
       await transaction.membership.create({
-        data: { organizationId: createdOrganization.id, userId: user.id },
+        data: {
+          organizationId: createdOrganization.id,
+          userId: user.id,
+          role: "ADMIN",
+        },
       });
 
       return createdOrganization;

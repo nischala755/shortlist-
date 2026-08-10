@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
-import { getOrganizationForUser } from "@/features/organizations/access";
+import {
+  canAccessOrganization,
+  getOrganizationForUser,
+} from "@/features/organizations/access";
 import { logger } from "@/lib/logger";
 
 export async function GET(
@@ -15,6 +18,16 @@ export async function GET(
     }
 
     const { organizationId } = await context.params;
+    const access = await canAccessOrganization(organizationId, user.id, "organization:read");
+
+    if (!access.membership) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+    }
+
+    if (!access.allowed) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
     const organization = await getOrganizationForUser(organizationId, user.id);
 
     if (!organization) {
