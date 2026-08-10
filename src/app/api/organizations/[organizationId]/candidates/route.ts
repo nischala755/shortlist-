@@ -14,8 +14,14 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     if (!access.membership) return NextResponse.json({ error: "Organization not found" }, { status: 404 });
     if (!access.allowed) return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
 
+    const query = new URL(request.url).searchParams.get("q")?.trim();
     const candidates = await getPrisma().candidate.findMany({
-      where: { organizationId },
+      where: {
+        organizationId,
+        ...(query
+          ? { OR: [{ name: { contains: query, mode: "insensitive" } }, { email: { contains: query, mode: "insensitive" } }] }
+          : {}),
+      },
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, email: true, phone: true, createdAt: true, updatedAt: true },
     });

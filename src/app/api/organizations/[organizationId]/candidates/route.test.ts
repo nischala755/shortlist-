@@ -49,6 +49,26 @@ describe("/api/organizations/:organizationId/candidates", () => {
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: "o-1" } }));
   });
 
+  it("passes search terms to the organization-scoped query", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "i@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "INTERVIEWER" }, allowed: true });
+    const findMany = vi.fn().mockResolvedValue([]);
+    mockedGetPrisma.mockReturnValue({ candidate: { findMany } } as never);
+
+    const response = await GET(new Request("http://localhost/api/organizations/o-1/candidates?q=ada"), { params: Promise.resolve({ organizationId: "o-1" }) });
+
+    expect(response.status).toBe(200);
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        organizationId: "o-1",
+        OR: [
+          { name: { contains: "ada", mode: "insensitive" } },
+          { email: { contains: "ada", mode: "insensitive" } },
+        ],
+      }),
+    }));
+  });
+
   it("rejects duplicate candidate email", async () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "r@example.com" });
     mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "RECRUITER" }, allowed: true });
