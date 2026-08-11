@@ -55,6 +55,14 @@ enum CodingSubmissionStatus {
   SUBMITTED
 }
 
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
 model Organization {
   id          String       @id @default(uuid()) @db.Uuid
   name        String
@@ -68,6 +76,7 @@ model Organization {
   candidateEvidence CandidateEvidence[]
   interviews   Interview[]
   codingAssessments CodingAssessment[]
+  offers       Offer[]
 
   @@index([name])
 }
@@ -94,6 +103,7 @@ model User {
   applications Application[] @relation("ApplicationCreatedBy")
   createdCodingAssessments CodingAssessment[] @relation("AssessmentCreatedBy")
   codingSubmissions CodingSubmission[] @relation("SubmissionByUser")
+  createdOffers Offer[] @relation("OfferCreatedBy")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
 
@@ -215,6 +225,7 @@ model Application {
   stageHistory   ApplicationStageHistory[]
   interviews     Interview[]
   codingAssessments CodingAssessment[]
+  offer          Offer?
 
   @@unique([jobId, candidateId])
   @@index([organizationId, currentStage])
@@ -329,6 +340,28 @@ model CodingSubmission {
   submittedBy   User                   @relation("SubmissionByUser", fields: [submittedById], references: [id], onDelete: Restrict)
 
   @@index([submittedById, status])
+}
+
+model Offer {
+  id                    String      @id @default(uuid()) @db.Uuid
+  organizationId       String      @db.Uuid
+  applicationId        String      @unique @db.Uuid
+  createdById           String      @db.Uuid
+  title                 String
+  details               String      @db.Text
+  compensationDetails  String?
+  expiresAt             DateTime?
+  status                OfferStatus @default(DRAFT)
+  sentAt                DateTime?
+  respondedAt           DateTime?
+  responseNote          String?     @db.Text
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  application           Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdBy             User         @relation("OfferCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status])
 }
 
 model InterviewScorecard {
