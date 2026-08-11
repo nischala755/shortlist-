@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { InterviewValidationError, validateInterviewInput } from "@/features/interviews/interview";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { notifyInterviewerScheduled } from "@/features/notifications/notifications";
 
 const interviewSelect = {
   id: true, scheduledStart: true, scheduledEnd: true, location: true, meetingUrl: true, status: true, createdAt: true, updatedAt: true,
@@ -48,6 +49,11 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     const interviewer = await prisma.membership.findUnique({ where: { organizationId_userId: { organizationId, userId: input.interviewerId } }, select: { role: true } });
     if (!interviewer || interviewer.role === "CANDIDATE") return NextResponse.json({ error: "Interviewer is not an authorized organization member" }, { status: 422 });
     const interview = await prisma.interview.create({ data: { organizationId, applicationId, createdById: access.user.id, ...input }, select: interviewSelect });
+    try {
+      await notifyInterviewerScheduled({ organizationId, interviewerId: input.interviewerId, interviewId: interview.id, scheduledStart: interview.scheduledStart });
+    } catch (notificationError) {
+      logger.error("Interview notification creation failed", notificationError);
+    }
     return NextResponse.json({ interview }, { status: 201 });
   } catch (error) {
     if (error instanceof InterviewValidationError) return NextResponse.json({ error: error.message }, { status: 400 });

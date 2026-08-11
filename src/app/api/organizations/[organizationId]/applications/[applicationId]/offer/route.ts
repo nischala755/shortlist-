@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { OfferValidationError, validateOfferInput, validateOfferStatus } from "@/features/offers/offer";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { notifyCandidateOfferSent } from "@/features/notifications/notifications";
 
 const offerSelect = {
   id: true, title: true, details: true, compensationDetails: true, expiresAt: true, status: true, sentAt: true, respondedAt: true, responseNote: true, createdAt: true, updatedAt: true,
@@ -76,6 +77,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     }
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No offer changes supplied" }, { status: 400 });
     const offer = await prisma.offer.update({ where: { id: existing.id }, data, select: offerSelect });
+    if (data.status === "SENT") {
+      try {
+        await notifyCandidateOfferSent({ organizationId, applicationId, offerId: offer.id, title: offer.title });
+      } catch (notificationError) {
+        logger.error("Offer notification creation failed", notificationError);
+      }
+    }
     return NextResponse.json({ offer });
   } catch (error) {
     if (error instanceof OfferValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
