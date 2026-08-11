@@ -5,6 +5,7 @@ import { InterviewValidationError, validateInterviewInput } from "@/features/int
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { notifyInterviewerScheduled } from "@/features/notifications/notifications";
+import { recordAuditLog } from "@/features/audit/audit";
 
 const interviewSelect = {
   id: true, scheduledStart: true, scheduledEnd: true, location: true, meetingUrl: true, status: true, createdAt: true, updatedAt: true,
@@ -53,6 +54,11 @@ export async function POST(request: Request, context: { params: Promise<{ organi
       await notifyInterviewerScheduled({ organizationId, interviewerId: input.interviewerId, interviewId: interview.id, scheduledStart: interview.scheduledStart });
     } catch (notificationError) {
       logger.error("Interview notification creation failed", notificationError);
+    }
+    try {
+      await recordAuditLog({ organizationId, actorId: access.user.id, action: "INTERVIEW_SCHEDULED", entityType: "Interview", entityId: interview.id, metadata: { applicationId, interviewerId: input.interviewerId } });
+    } catch (auditError) {
+      logger.error("Interview audit failed", auditError);
     }
     return NextResponse.json({ interview }, { status: 201 });
   } catch (error) {

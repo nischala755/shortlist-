@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { canTransitionApplicationStage, validateApplicationStage, ApplicationValidationError } from "@/features/applications/application";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { recordAuditLog } from "@/features/audit/audit";
 
 export async function PATCH(request: Request, context: { params: Promise<{ organizationId: string; applicationId: string }> }) {
   try {
@@ -27,6 +28,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
       await transaction.applicationStageHistory.create({ data: { applicationId, changedById: user.id, fromStage: application.currentStage, toStage: nextStage } });
       return result;
     });
+    try {
+      await recordAuditLog({ organizationId, actorId: user.id, action: "APPLICATION_STAGE_CHANGED", entityType: "Application", entityId: applicationId, metadata: { fromStage: application.currentStage, toStage: nextStage } });
+    } catch (auditError) {
+      logger.error("Application stage audit failed", auditError);
+    }
     return NextResponse.json({ application: updated });
   } catch (error) {
     if (error instanceof ApplicationValidationError) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -5,6 +5,7 @@ import { OfferValidationError, validateOfferInput, validateOfferStatus } from "@
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { notifyCandidateOfferSent } from "@/features/notifications/notifications";
+import { recordAuditLog } from "@/features/audit/audit";
 
 const offerSelect = {
   id: true, title: true, details: true, compensationDetails: true, expiresAt: true, status: true, sentAt: true, respondedAt: true, responseNote: true, createdAt: true, updatedAt: true,
@@ -82,6 +83,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
         await notifyCandidateOfferSent({ organizationId, applicationId, offerId: offer.id, title: offer.title });
       } catch (notificationError) {
         logger.error("Offer notification creation failed", notificationError);
+      }
+    }
+    if (typeof data.status === "string") {
+      try {
+        await recordAuditLog({ organizationId, actorId: access.user.id, action: `OFFER_${data.status}`, entityType: "Offer", entityId: offer.id, metadata: { applicationId } });
+      } catch (auditError) {
+        logger.error("Offer audit failed", auditError);
       }
     }
     return NextResponse.json({ offer });

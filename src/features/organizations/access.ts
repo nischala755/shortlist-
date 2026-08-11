@@ -19,14 +19,15 @@ export type OrganizationPermission =
   | "assessment:manage"
   | "offer:read"
   | "offer:manage"
-  | "analytics:read";
+  | "analytics:read"
+  | "audit:read";
 
 const rolePermissions: Record<Role, readonly OrganizationPermission[]> = {
   [Role.CANDIDATE]: [],
-  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read"],
-  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read"],
+  [Role.RECRUITER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read", "audit:read"],
+  [Role.HIRING_MANAGER]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read", "audit:read"],
   [Role.INTERVIEWER]: ["organization:read", "member:read", "job:read", "candidate:read", "application:read", "interview:read", "scorecard:read", "scorecard:manage", "assessment:read", "offer:read"],
-  [Role.ADMIN]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read"],
+  [Role.ADMIN]: ["organization:read", "member:read", "member:manage", "job:read", "job:manage", "candidate:read", "candidate:manage", "application:read", "application:manage", "interview:read", "interview:manage", "scorecard:read", "scorecard:manage", "assessment:read", "assessment:manage", "offer:read", "offer:manage", "analytics:read", "audit:read"],
 };
 
 export function hasPermission(role: Role, permission: OrganizationPermission) {

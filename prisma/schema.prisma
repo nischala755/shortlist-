@@ -85,6 +85,7 @@ model Organization {
   codingAssessments CodingAssessment[]
   offers       Offer[]
   notifications Notification[]
+  auditLogs    AuditLog[]
 
   @@index([name])
 }
@@ -113,6 +114,7 @@ model User {
   codingSubmissions CodingSubmission[] @relation("SubmissionByUser")
   createdOffers Offer[] @relation("OfferCreatedBy")
   notifications Notification[]
+  auditLogs AuditLog[] @relation("AuditActor")
   applicationStageChanges ApplicationStageHistory[] @relation("ApplicationStageChangedBy")
 }
 
@@ -388,6 +390,23 @@ model Notification {
 
   @@index([userId, readAt, createdAt])
   @@index([organizationId, createdAt])
+}
+
+model AuditLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  actorId        String?      @db.Uuid
+  action         String
+  entityType     String
+  entityId       String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor          User?        @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
+  @@index([organizationId, action, createdAt])
 }
 
 model InterviewScorecard {
