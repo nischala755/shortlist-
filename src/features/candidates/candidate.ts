@@ -35,3 +35,9 @@ export function validateCandidateInput(input: unknown): CandidateInput {
 
   return { name, email, ...(phone ? { phone } : {}) };
 }
+
+export function validateCandidateUpdateInput(input: unknown) {
+  const candidate = validateCandidateInput(input);
+  const value = input as Record<string, unknown>;
+  return { ...candidate, phone: typeof value.phone === "string" && value.phone.trim() ? value.phone.trim() : null };
+}

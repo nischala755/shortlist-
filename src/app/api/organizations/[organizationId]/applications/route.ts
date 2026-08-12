@@ -5,6 +5,8 @@ import { ApplicationValidationError, validateApplicationInput } from "@/features
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
+class ApplicationJobUnavailableError extends Error {}
+
 export async function GET(request: Request, context: { params: Promise<{ organizationId: string }> }) {
   try {
     const user = await getCurrentUser(request);
@@ -45,9 +47,10 @@ export async function POST(request: Request, context: { params: Promise<{ organi
 
     const input = validateApplicationInput(await request.json());
     const application = await getPrisma().$transaction(async (transaction) => {
-      const job = await transaction.job.findFirst({ where: { id: input.jobId, organizationId }, select: { id: true } });
+      const job = await transaction.job.findFirst({ where: { id: input.jobId, organizationId }, select: { id: true, status: true } });
       const candidate = await transaction.candidate.findFirst({ where: { id: input.candidateId, organizationId }, select: { id: true } });
       if (!job || !candidate) return null;
+      if (job.status !== "PUBLISHED") throw new ApplicationJobUnavailableError();
 
       const application = await transaction.application.create({
         data: { organizationId, jobId: input.jobId, candidateId: input.candidateId, createdById: user.id },
@@ -65,6 +68,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     return NextResponse.json({ application }, { status: 201 });
   } catch (error) {
     if (error instanceof ApplicationValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof ApplicationJobUnavailableError) return NextResponse.json({ error: "Applications can only be created for published jobs" }, { status: 409 });
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
       return NextResponse.json({ error: "This candidate already has an application for the job" }, { status: 409 });
     }

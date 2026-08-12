@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
-import { CandidateValidationError, validateCandidateInput } from "@/features/candidates/candidate";
+import { CandidateValidationError, validateCandidateUpdateInput } from "@/features/candidates/candidate";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     const access = await authorizeCandidate(request, organizationId, "candidate:manage");
     if (access.response) return access.response;
 
-    const input = validateCandidateInput(await request.json());
+    const input = validateCandidateUpdateInput(await request.json());
     const result = await getPrisma().candidate.updateMany({
       where: { id: candidateId, organizationId },
       data: input,

@@ -22,7 +22,7 @@ describe("/api/organizations/:organizationId/applications", () => {
     mockedGetCurrentUser.mockResolvedValue(user);
     mockedCanAccess.mockResolvedValue(access);
     const transaction = {
-      job: { findFirst: vi.fn().mockResolvedValue({ id: "job-1" }) },
+      job: { findFirst: vi.fn().mockResolvedValue({ id: "job-1", status: "PUBLISHED" }) },
       candidate: { findFirst: vi.fn().mockResolvedValue({ id: "candidate-1" }) },
       application: { create: vi.fn().mockResolvedValue({ id: "application-1", currentStage: "APPLIED" }) },
       applicationStageHistory: { create: vi.fn().mockResolvedValue({}) },
@@ -49,6 +49,23 @@ describe("/api/organizations/:organizationId/applications", () => {
     const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ jobId: "other-job", candidateId: "candidate-1" }) }), { params: Promise.resolve({ organizationId: "org-1" }) });
 
     expect(response.status).toBe(404);
+    expect(transaction.application.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects an application for a job that is not published", async () => {
+    mockedGetCurrentUser.mockResolvedValue(user);
+    mockedCanAccess.mockResolvedValue(access);
+    const transaction = {
+      job: { findFirst: vi.fn().mockResolvedValue({ id: "job-1", status: "DRAFT" }) },
+      candidate: { findFirst: vi.fn().mockResolvedValue({ id: "candidate-1" }) },
+      application: { create: vi.fn() },
+      applicationStageHistory: { create: vi.fn() },
+    };
+    mockedGetPrisma.mockReturnValue({ $transaction: vi.fn(async (callback) => callback(transaction)) } as never);
+
+    const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ jobId: "job-1", candidateId: "candidate-1" }) }), { params: Promise.resolve({ organizationId: "org-1" }) });
+
+    expect(response.status).toBe(409);
     expect(transaction.application.create).not.toHaveBeenCalled();
   });
 
