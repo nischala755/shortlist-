@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
@@ -17,7 +18,7 @@ export default async function DashboardPage() {
       <header className="dashboard-header"><Brand /><div><span>{user.email}</span><LogoutButton /></div></header>
       <main className="dashboard-main">
         <div className="dashboard-title"><div><p className="eyebrow">Workspace</p><h1>Good hiring starts with a clear brief.</h1><p>Select an organization or create one to begin the recruiting workflow.</p></div><CreateOrganizationForm /></div>
-        {organizations.length > 0 ? <section className="workspace-grid" aria-label="Your organizations">{organizations.map((organization) => <article key={organization.id}><span className="workspace-mark">{organization.name.slice(0, 2).toUpperCase()}</span><div><strong>{organization.name}</strong><small>{organization.memberships[0]?.role.replaceAll("_", " ").toLowerCase()}</small></div></article>)}</section> : <section className="empty-state"><span className="empty-icon" aria-hidden="true">◇</span><h2>No organization yet</h2><p>Create your first organization to establish an isolated hiring workspace.</p></section>}
+        {organizations.length > 0 ? <section className="workspace-grid" aria-label="Your organizations">{organizations.map((organization) => <Link href={`/dashboard/organizations/${organization.id}`} key={organization.id}><span className="workspace-mark">{organization.name.slice(0, 2).toUpperCase()}</span><div><strong>{organization.name}</strong><small>{organization.memberships[0]?.role.replaceAll("_", " ").toLowerCase()}</small></div><span className="workspace-arrow" aria-hidden="true">→</span></Link>)}</section> : <section className="empty-state"><span className="empty-icon" aria-hidden="true">◇</span><h2>No organization yet</h2><p>Create your first organization to establish an isolated hiring workspace.</p></section>}
       </main>
     </div>
   );

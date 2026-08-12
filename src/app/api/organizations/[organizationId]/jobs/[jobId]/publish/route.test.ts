@@ -22,7 +22,7 @@ describe("POST /publish", () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "a@example.com" });
     mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "ADMIN" }, allowed: true });
     mockedGetJob.mockResolvedValue({ id: "j-1", organizationId: "o-1", title: "Engineer", description: "Build", status: "DRAFT" });
-    mockedGetPrisma.mockReturnValue({ job: { update: vi.fn().mockResolvedValue({ id: "j-1", status: "PUBLISHED" }) } } as never);
+    mockedGetPrisma.mockReturnValue({ jobRequirement: { count: vi.fn().mockResolvedValue(1) }, job: { update: vi.fn().mockResolvedValue({ id: "j-1", status: "PUBLISHED" }) } } as never);
 
     const response = await POST(new Request("http://localhost"), { params: Promise.resolve({ organizationId: "o-1", jobId: "j-1" }) });
     expect(response.status).toBe(200);
@@ -35,5 +35,18 @@ describe("POST /publish", () => {
 
     const response = await POST(new Request("http://localhost"), { params: Promise.resolve({ organizationId: "o-1", jobId: "j-1" }) });
     expect(response.status).toBe(409);
+  });
+
+  it("requires evidence criteria before publishing", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "a@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "ADMIN" }, allowed: true });
+    mockedGetJob.mockResolvedValue({ id: "j-1", organizationId: "o-1", title: "Engineer", description: "Build", status: "DRAFT" });
+    const update = vi.fn();
+    mockedGetPrisma.mockReturnValue({ jobRequirement: { count: vi.fn().mockResolvedValue(0) }, job: { update } } as never);
+
+    const response = await POST(new Request("http://localhost"), { params: Promise.resolve({ organizationId: "o-1", jobId: "j-1" }) });
+
+    expect(response.status).toBe(409);
+    expect(update).not.toHaveBeenCalled();
   });
 });

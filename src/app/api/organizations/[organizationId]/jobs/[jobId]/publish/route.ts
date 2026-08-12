@@ -18,6 +18,9 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     if (!existing) return NextResponse.json({ error: "Job not found" }, { status: 404 });
     if (existing.status !== "DRAFT") return NextResponse.json({ error: "Only draft jobs can be published" }, { status: 409 });
 
+    const requirementCount = await getPrisma().jobRequirement.count({ where: { jobId } });
+    if (requirementCount === 0) return NextResponse.json({ error: "Add at least one requirement before publishing" }, { status: 409 });
+
     const job = await getPrisma().job.update({ where: { id: jobId }, data: { status: "PUBLISHED" }, select: { id: true, status: true } });
     return NextResponse.json({ job });
   } catch (error) {

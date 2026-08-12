@@ -81,7 +81,7 @@ Route handlers are under `src/app/api`:
 - `/api/organizations/{organizationId}/analytics` — scoped aggregate reporting
 - `/api/organizations/{organizationId}/audit-logs` — authorized immutable event history
 
-Browser routes currently include the product landing page, registration, email verification, login, password recovery, and the protected `/dashboard` workspace entry. Recruiting workflow screens are being added as independently testable vertical slices over the existing APIs.
+Browser routes include the product landing page, registration, email verification, login, password recovery, and protected workspaces under `/dashboard`. The organization workspace now supports the complete job lifecycle: draft creation and editing, evidence requirements, publishing, filtering, and closing. Candidate and pipeline screens remain separate vertical slices over the existing APIs.
 
 Every organization-scoped route checks authentication, membership, permission, and resource ownership where applicable. Candidate portal routes additionally require a candidate membership and match the candidate profile to the authenticated email.
 

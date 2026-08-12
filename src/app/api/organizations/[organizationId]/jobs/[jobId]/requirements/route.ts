@@ -52,6 +52,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     return NextResponse.json({ requirement }, { status: 201 });
   } catch (error) {
     if (error instanceof JobValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") return NextResponse.json({ error: "This job already has a requirement with that title" }, { status: 409 });
     logger.error("Job requirement creation failed", error);
     return NextResponse.json({ error: "Unable to create requirement" }, { status: 500 });
   }
