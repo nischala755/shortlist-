@@ -1,35 +1,28 @@
 # EvidenceHire
 
-EvidenceHire is an evidence-driven recruitment and applicant-tracking API for the DevFusion 4.O Developers Hackathon. It helps hiring teams organize candidate evidence against job requirements while keeping hiring decisions with authorized humans.
+EvidenceHire is an evidence-driven applicant tracking system. Hiring teams define job requirements, collect candidate evidence, review gaps, and record structured interviews while authorized people retain every hiring decision.
 
-## Current scope
+AI is deliberately narrow: it extracts and summarizes resume content, maps exact source quotes, and identifies missing information. It cannot hire or reject, change pipeline stages, bypass permissions, or create candidate evidence.
 
-Implemented vertical slices include:
+## MVP capabilities
 
-- foundation, PostgreSQL data model, authentication, sessions, email verification, and password reset
-- responsive product landing page, authentication screens, and a server-protected workspace entry
-- organization isolation and role-based access control
-- jobs, requirements, candidates, applications, and stage history
-- secure PDF/DOCX resume upload, parsing, and persisted text
-- optional grounded Mistral resume analysis with exact evidence-quote validation
-- candidate evidence, Evidence Matrix, and deterministic evidence-gap reporting
-- interview scheduling and structured scorecards
-- coding-assessment authoring and candidate draft/final submissions (code is stored, never executed)
-- offer workflow, candidate responses, in-app notifications, analytics, and audit logs
-- HTTP security headers, request-size protection, coverage reporting, and standalone deployment assets
+- Account registration, verification, password reset, sessions, and device logout
+- Organization isolation and role-based access for admins, recruiters, hiring managers, interviewers, and candidates
+- Jobs and requirements, candidates, applications, and stage history
+- PDF/DOCX upload, parsing, grounded Mistral analysis, candidate evidence, evidence matrix, and gap reports
+- Interview scheduling, structured scorecards, coding assessments, candidate portal, and offer responses
+- Notifications, analytics, immutable audit review, security controls, CI, smoke tests, and container deployment
 
-AI assists with extraction and analysis only. It does not hire, reject, alter authorization, fabricate evidence, or change application stages.
+See [Architecture](docs/architecture.md), [Deployment](docs/deployment.md), [Demo and verification](docs/demo-and-verification.md), and [Roadmap completion](docs/roadmap-completion.md).
 
 ## Requirements
 
-- Node.js 22.3+ (Node.js 24 is also supported)
+- Node.js 22
 - npm
-- PostgreSQL 15+
-- Docker Desktop only if building the production image
+- PostgreSQL 15 or newer
+- Docker only for container deployment
 
 ## Local setup
-
-Create a PostgreSQL database and application role, then configure a local environment file. Never put real credentials in `.env.example` or Git.
 
 ```powershell
 Copy-Item .env.example .env
@@ -39,119 +32,52 @@ npm run db:migrate
 npm run dev
 ```
 
-Set `DATABASE_URL` in `.env`, for example:
+Set `DATABASE_URL` in `.env`:
 
 ```text
 postgresql://evidencehire_app:your-password@localhost:5432/evidencehire?schema=public
 ```
 
-Useful checks:
+Development defaults to console email and filesystem resume storage. `MISTRAL_API_KEY` is optional; all non-AI workflows work without it. Never commit `.env` or candidate files.
 
-- `http://localhost:3000/api/health`
-- `http://localhost:3000/api/health/database`
+Health endpoints:
 
-For local AI analysis, set `MISTRAL_API_KEY` and optionally `MISTRAL_MODEL`. The key must remain in the ignored `.env` file. The provider is optional; parsing and the rest of the application work without it.
+- `GET /api/health` checks the web process.
+- `GET /api/health/database` checks database readiness.
 
 ## Verification
 
-Run the full local gate before pushing:
-
 ```bash
 npm run verify
-```
-
-This runs ESLint, TypeScript checking, all Vitest tests, and the production build. Additional commands:
-
-```bash
-npm test
 npm run test:coverage
-npm run db:migrate:deploy
+npm run verify:release
 ```
 
-The integration authentication test runs when `DATABASE_URL` is available and verifies registration, login, session lookup, logout, and session invalidation.
+`verify:release` runs lint, type checking, 242 automated tests, production build, migration status, dependency audit, and a database-backed smoke journey. It requires an available test database and briefly starts the app on port `3111` by default.
 
-## API areas
+## Production services
 
-Route handlers are under `src/app/api`:
+Production fails fast unless these boundaries are configured:
 
-- `/api/auth/*` — authentication and session lifecycle
-- `/api/organizations/*` — organization-scoped recruiting operations
-- `/api/portal/*` — candidate-only application, assessment, and offer access
-- `/api/notifications` — current-user notification listing and read state
-- `/api/organizations/{organizationId}/analytics` — scoped aggregate reporting
-- `/api/organizations/{organizationId}/audit-logs` — authorized immutable event history
+- HTTPS `APP_URL`
+- managed PostgreSQL `DATABASE_URL`
+- private S3-compatible resume bucket
+- Resend sender and API key
 
-Browser routes include the product landing page, registration, email verification, login, password recovery, and role-routed workspaces. Recruiters work under `/dashboard`; candidate members enter an email-bound portal under `/portal/organizations/{organizationId}`. The organization workspace supports jobs, candidates, a seven-stage pipeline, evidence review, interviews, scorecards, coding assessments, and verified-user role provisioning. Candidate users can track application stages, explicitly start timed assessments before questions are revealed, save drafts, make one-way final submissions, and view or respond to non-draft offers. Candidate code is stored as text and never executed. AI-assisted extraction remains separate from human-recorded evidence and never makes hiring decisions.
+Check configuration with `npm run check:production`. Run database migrations as a release step before starting the application. Detailed commands and rollback guidance are in [docs/deployment.md](docs/deployment.md).
 
-Every organization-scoped route checks authentication, membership, permission, and resource ownership where applicable. Candidate portal routes additionally require a candidate membership and match the candidate profile to the authenticated email.
+## Important safety boundaries
 
-## Roles
+- Session and one-time tokens are stored as hashes.
+- Every organization route checks membership, permission, and resource ownership.
+- Candidate portal access is bound to a candidate-role membership and matching email.
+- Resume size, MIME type, extension, and storage keys are validated.
+- AI evidence quotes must occur verbatim in parsed resume text.
+- Coding submissions are stored as text and never executed.
+- Only humans move applications or send/respond to offers.
 
-- `ADMIN` — organization administration and all recruiting permissions
-- `RECRUITER` — recruiting operations and workflow management
-- `HIRING_MANAGER` — recruiting operations and workflow management
-- `INTERVIEWER` — assigned interview and scorecard access
-- `CANDIDATE` — candidate portal access only
+Report security issues privately to the maintainers. Do not include credentials or candidate data in public issues.
 
-Role permissions are defined in `src/features/organizations/access.ts`; do not duplicate permission logic in new routes.
+## Development discipline
 
-## Database and migrations
-
-Prisma schema: `prisma/schema.prisma`.
-
-Local development:
-
-```bash
-npm run db:migrate
-```
-
-Deployment/release environments:
-
-```bash
-npm run db:migrate:deploy
-```
-
-Do not edit an existing migration after it has been applied. Add a new migration for every schema change and regenerate the client with `npm run db:generate`.
-
-## Production deployment
-
-The repository includes a standalone Next.js Docker deployment:
-
-```bash
-docker build -t evidencehire .
-docker run --env-file .env.production -p 3000:3000 evidencehire
-```
-
-Run migrations as a release step before starting the container:
-
-```bash
-npm run db:migrate:deploy
-```
-
-Required production configuration includes `APP_ENV=production`, `APP_URL`, a managed PostgreSQL `DATABASE_URL`, and a strong application database password. Configure `MISTRAL_API_KEY` only when AI analysis is enabled.
-
-Resume storage currently uses `RESUME_STORAGE_PATH`. A production deployment must mount durable storage or replace this adapter with object storage before relying on resumes across container replacements. The local filesystem is not durable container storage.
-
-## Security boundaries
-
-- session tokens are stored in hashed form and delivered through HTTP-only, same-site cookies
-- organization and candidate ownership is checked at the route boundary
-- resume types and size are validated; storage keys are path-checked
-- AI evidence quotes must be exact substrings of parsed resume text
-- candidate code submissions are never executed by the server
-- audit persistence does not change business outcomes and audit records are query-only
-- `src/proxy.ts` adds security headers and rejects oversized requests
-
-Report security issues privately to the maintainers rather than opening a public issue with credentials or candidate data.
-
-## Incremental development rules
-
-Keep changes in independently understandable vertical slices. Each slice should have:
-
-1. a clear domain purpose and authorization boundary
-2. validation and explicit error cases
-3. focused unit or route tests
-4. a passing `npm run verify`
-5. a meaningful commit describing the milestone
-
-Do not commit `.env`, `coverage/`, uploaded resumes, generated Prisma output, or secrets.
+Keep changes in independently testable vertical slices. Each change needs a domain purpose, authorization boundary, validation and error cases, focused tests, a passing release gate, and a commit message that names the milestone. Do not rewrite applied migrations.
