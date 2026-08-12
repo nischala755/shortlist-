@@ -24,10 +24,16 @@ describe("candidate offer portal", () => {
   });
 
   it("lets the candidate accept a sent offer", async () => {
-    const update = vi.fn().mockResolvedValue({ id: "offer-1", status: "ACCEPTED" });
-    mockedGetPrisma.mockReturnValue({ offer: { findFirst: vi.fn().mockResolvedValue({ id: "offer-1", status: "SENT", expiresAt: null }), update } } as never);
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    mockedGetPrisma.mockReturnValue({ offer: { findFirst: vi.fn().mockResolvedValue({ id: "offer-1", status: "SENT", expiresAt: null }), updateMany, findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "offer-1", status: "ACCEPTED" }) } } as never);
     const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ status: "ACCEPTED" }) }), { params: Promise.resolve(params) });
     expect(response.status).toBe(200);
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "ACCEPTED", respondedAt: expect.any(Date) }) }));
+    expect(updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "offer-1", status: "SENT" }, data: expect.objectContaining({ status: "ACCEPTED", respondedAt: expect.any(Date) }) }));
+  });
+
+  it("rejects a concurrent second response", async () => {
+    mockedGetPrisma.mockReturnValue({ offer: { findFirst: vi.fn().mockResolvedValue({ id: "offer-1", status: "SENT", expiresAt: null }), updateMany: vi.fn().mockResolvedValue({ count: 0 }) } } as never);
+    const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ status: "DECLINED" }) }), { params: Promise.resolve(params) });
+    expect(response.status).toBe(409);
   });
 });

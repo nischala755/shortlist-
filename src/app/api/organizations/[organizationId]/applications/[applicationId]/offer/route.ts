@@ -42,8 +42,9 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     if (access.response) return access.response;
     const input = validateOfferInput(await request.json());
     const prisma = getPrisma();
-    const application = await prisma.application.findFirst({ where: { id: applicationId, organizationId }, select: { id: true } });
+    const application = await prisma.application.findFirst({ where: { id: applicationId, organizationId }, select: { id: true, currentStage: true } });
     if (!application) return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    if (application.currentStage !== "OFFER") return NextResponse.json({ error: "Application must be at the offer stage before drafting an offer" }, { status: 409 });
     const offer = await prisma.offer.create({ data: { organizationId, applicationId, createdById: access.user.id, ...input }, select: offerSelect });
     return NextResponse.json({ offer }, { status: 201 });
   } catch (error) {
@@ -77,7 +78,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
       Object.assign(data, validateOfferPatch(body));
     }
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No offer changes supplied" }, { status: 400 });
-    const offer = await prisma.offer.update({ where: { id: existing.id }, data, select: offerSelect });
+    const result = await prisma.offer.updateMany({ where: { id: existing.id, status: existing.status }, data });
+    if (result.count !== 1) return NextResponse.json({ error: "Offer changed while this request was being processed" }, { status: 409 });
+    const offer = await prisma.offer.findUniqueOrThrow({ where: { id: existing.id }, select: offerSelect });
     if (data.status === "SENT") {
       try {
         await notifyCandidateOfferSent({ organizationId, applicationId, offerId: offer.id, title: offer.title });
