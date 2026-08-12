@@ -22,7 +22,7 @@ describe("organization analytics", () => {
     mockedGetPrisma.mockReturnValue({
       job: { findMany: vi.fn().mockResolvedValue([{ status: "DRAFT" }, { status: "DRAFT" }]) },
       candidate: { count: vi.fn().mockResolvedValue(3) },
-      application: { findMany: vi.fn().mockResolvedValue([{ currentStage: "APPLIED" }]) },
+      application: { findMany: vi.fn().mockResolvedValue([{ currentStage: "APPLIED", job: { id: "j-1", title: "Engineer" } }]) },
       interview: { findMany: vi.fn().mockResolvedValue([{ status: "SCHEDULED" }]) },
       offer: { findMany: vi.fn().mockResolvedValue([{ status: "SENT" }]) },
       resume: { count: vi.fn().mockResolvedValue(2) },
@@ -34,6 +34,7 @@ describe("organization analytics", () => {
     expect(response.status).toBe(200);
     expect(body.jobs).toEqual({ total: 2, byStatus: { DRAFT: 2 } });
     expect(body.applications.byStage.APPLIED).toBe(1);
+    expect(body.applicationsByJob[0]).toMatchObject({ title: "Engineer", total: 1 });
   });
 
   it("rejects an invalid date range", async () => {
