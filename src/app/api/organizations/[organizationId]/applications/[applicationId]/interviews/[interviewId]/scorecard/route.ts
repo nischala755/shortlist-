@@ -54,6 +54,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     const interview = await findInterview(organizationId, applicationId, interviewId, access.role === "INTERVIEWER" ? access.user.id : undefined);
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     if (interview.status === "CANCELLED") return NextResponse.json({ error: "Cancelled interviews cannot receive scorecards" }, { status: 409 });
+    if (interview.status !== "COMPLETED") return NextResponse.json({ error: "Complete the interview before submitting a scorecard" }, { status: 409 });
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may submit this scorecard" }, { status: 403 });
     const input = validateScorecardInput(await request.json());
     const scorecard = await getPrisma().interviewScorecard.create({ data: { interviewId, submittedById: access.user.id, criteriaJson: input.criteria, overallRating: input.overallRating, strengths: input.strengths, concerns: input.concerns, notes: input.notes }, select: scorecardSelect });
@@ -73,6 +74,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     if (access.response) return access.response;
     const interview = await findInterview(organizationId, applicationId, interviewId, access.role === "INTERVIEWER" ? access.user.id : undefined);
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+    if (interview.status !== "COMPLETED") return NextResponse.json({ error: "Only completed interview scorecards can be edited" }, { status: 409 });
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may edit this scorecard" }, { status: 403 });
     const input = validateScorecardInput(await request.json());
     const scorecard = await getPrisma().interviewScorecard.update({ where: { interviewId }, data: { criteriaJson: input.criteria, overallRating: input.overallRating, strengths: input.strengths, concerns: input.concerns, notes: input.notes }, select: scorecardSelect });

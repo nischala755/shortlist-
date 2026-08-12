@@ -57,4 +57,18 @@ describe("application interviews", () => {
     expect(response.status).toBe(422);
     expect(create).not.toHaveBeenCalled();
   });
+
+  it("rejects overlapping interviews for the same interviewer", async () => {
+    const create = vi.fn();
+    mockedGetPrisma.mockReturnValue({
+      application: { findFirst: vi.fn().mockResolvedValue({ id: "a-1" }) },
+      membership: { findUnique: vi.fn().mockResolvedValue({ role: "INTERVIEWER" }) },
+      interview: { findFirst: vi.fn().mockResolvedValue({ id: "i-existing" }), create },
+    } as never);
+
+    const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ interviewerId: "u-2", scheduledStart: start, scheduledEnd: end, meetingUrl: "https://meet.example/interview" }) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(409);
+    expect(create).not.toHaveBeenCalled();
+  });
 });

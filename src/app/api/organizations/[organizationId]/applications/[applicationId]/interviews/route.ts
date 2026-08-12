@@ -7,6 +7,8 @@ import { logger } from "@/lib/logger";
 import { notifyInterviewerScheduled } from "@/features/notifications/notifications";
 import { recordAuditLog } from "@/features/audit/audit";
 
+class InterviewScheduleConflictError extends Error {}
+
 const interviewSelect = {
   id: true, scheduledStart: true, scheduledEnd: true, location: true, meetingUrl: true, status: true, createdAt: true, updatedAt: true,
   interviewer: { select: { id: true, email: true } },
@@ -57,6 +59,11 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     if (!application) return NextResponse.json({ error: "Application not found" }, { status: 404 });
     const interviewer = await prisma.membership.findUnique({ where: { organizationId_userId: { organizationId, userId: input.interviewerId } }, select: { role: true } });
     if (!interviewer || interviewer.role === "CANDIDATE") return NextResponse.json({ error: "Interviewer is not an authorized organization member" }, { status: 422 });
+    const conflict = await prisma.interview.findFirst({
+      where: { organizationId, interviewerId: input.interviewerId, status: "SCHEDULED", scheduledStart: { lt: input.scheduledEnd }, scheduledEnd: { gt: input.scheduledStart } },
+      select: { id: true },
+    });
+    if (conflict) throw new InterviewScheduleConflictError();
     const interview = await prisma.interview.create({ data: { organizationId, applicationId, createdById: access.user.id, ...input }, select: interviewSelect });
     try {
       await notifyInterviewerScheduled({ organizationId, interviewerId: input.interviewerId, interviewId: interview.id, scheduledStart: interview.scheduledStart });
@@ -71,6 +78,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     return NextResponse.json({ interview }, { status: 201 });
   } catch (error) {
     if (error instanceof InterviewValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof InterviewScheduleConflictError) return NextResponse.json({ error: "The interviewer already has an overlapping interview" }, { status: 409 });
     logger.error("Interview creation failed", error);
     return NextResponse.json({ error: "Unable to schedule interview" }, { status: 500 });
   }

@@ -5,6 +5,8 @@ import { InterviewValidationError, validateInterviewInput } from "@/features/int
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
+class InterviewScheduleConflictError extends Error {}
+
 const interviewSelect = {
   id: true, scheduledStart: true, scheduledEnd: true, location: true, meetingUrl: true, status: true, createdAt: true, updatedAt: true,
   interviewer: { select: { id: true, email: true } },
@@ -57,10 +59,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     const prisma = getPrisma();
     const interviewer = await prisma.membership.findUnique({ where: { organizationId_userId: { organizationId, userId: input.interviewerId } }, select: { role: true } });
     if (!interviewer || interviewer.role === "CANDIDATE") return NextResponse.json({ error: "Interviewer is not an authorized organization member" }, { status: 422 });
+    const conflict = input.status === "SCHEDULED" ? await prisma.interview.findFirst({
+      where: { organizationId, interviewerId: input.interviewerId, status: "SCHEDULED", id: { not: interviewId }, scheduledStart: { lt: input.scheduledEnd }, scheduledEnd: { gt: input.scheduledStart } },
+      select: { id: true },
+    }) : null;
+    if (conflict) throw new InterviewScheduleConflictError();
     const interview = await prisma.interview.update({ where: { id: interviewId }, data: input, select: interviewSelect });
     return NextResponse.json({ interview });
   } catch (error) {
     if (error instanceof InterviewValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof InterviewScheduleConflictError) return NextResponse.json({ error: "The interviewer already has an overlapping interview" }, { status: 409 });
     logger.error("Interview update failed", error);
     return NextResponse.json({ error: "Unable to update interview" }, { status: 500 });
   }

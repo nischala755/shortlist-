@@ -34,6 +34,16 @@ describe("interview scorecard", () => {
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ interviewId: "i-1", submittedById: "u-2", overallRating: 4 }) }));
   });
 
+  it("requires the interview to be completed before submission", async () => {
+    const create = vi.fn();
+    mockedGetPrisma.mockReturnValue({ interview: { findFirst: vi.fn().mockResolvedValue({ id: "i-1", interviewerId: "u-2", status: "SCHEDULED" }) }, interviewScorecard: { create } } as never);
+
+    const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify(validBody) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(409);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it("prevents an interviewer from scoring another interviewer’s interview", async () => {
     mockedGetPrisma.mockReturnValue({ interview: { findFirst: vi.fn().mockResolvedValue({ id: "i-1", interviewerId: "u-other", status: "COMPLETED" }) }, interviewScorecard: { create: vi.fn() } } as never);
 
