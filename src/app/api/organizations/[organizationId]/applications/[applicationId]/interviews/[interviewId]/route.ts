@@ -17,7 +17,7 @@ async function authorize(request: Request, organizationId: string, permission: "
   const access = await canAccessOrganization(organizationId, user.id, permission);
   if (!access.membership) return { response: NextResponse.json({ error: "Organization not found" }, { status: 404 }) };
   if (!access.allowed) return { response: NextResponse.json({ error: "Insufficient permissions" }, { status: 403 }) };
-  return { user };
+  return { user, role: access.membership.role };
 }
 
 async function findInterview(organizationId: string, applicationId: string, interviewId: string) {
@@ -29,7 +29,15 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     const { organizationId, applicationId, interviewId } = await context.params;
     const access = await authorize(request, organizationId, "interview:read");
     if (access.response) return access.response;
-    const interview = await getPrisma().interview.findFirst({ where: { id: interviewId, organizationId, applicationId }, select: interviewSelect });
+    const interview = await getPrisma().interview.findFirst({
+      where: {
+        id: interviewId,
+        organizationId,
+        applicationId,
+        ...(access.role === "INTERVIEWER" ? { interviewerId: access.user.id } : {}),
+      },
+      select: interviewSelect,
+    });
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     return NextResponse.json({ interview });
   } catch (error) {

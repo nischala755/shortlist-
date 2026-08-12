@@ -34,4 +34,14 @@ describe("organization offer workflow", () => {
     expect(response.status).toBe(200);
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "SENT", sentAt: expect.any(Date) }) }));
   });
+
+  it("updates one draft offer field without requiring the full offer", async () => {
+    const update = vi.fn().mockResolvedValue({ id: "offer-1", status: "DRAFT", title: "Updated offer" });
+    mockedGetPrisma.mockReturnValue({ offer: { findFirst: vi.fn().mockResolvedValue({ id: "offer-1", status: "DRAFT", expiresAt: null }), update } } as never);
+
+    const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ title: "Updated offer" }) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(200);
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: { title: "Updated offer" } }));
+  });
 });

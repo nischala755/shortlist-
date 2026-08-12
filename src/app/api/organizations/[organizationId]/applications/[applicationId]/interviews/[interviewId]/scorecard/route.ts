@@ -19,8 +19,11 @@ async function authorize(request: Request, organizationId: string, permission: "
   return { user, role: access.membership.role };
 }
 
-async function findInterview(organizationId: string, applicationId: string, interviewId: string) {
-  return getPrisma().interview.findFirst({ where: { id: interviewId, organizationId, applicationId }, select: { id: true, interviewerId: true, status: true } });
+async function findInterview(organizationId: string, applicationId: string, interviewId: string, assignedInterviewerId?: string) {
+  return getPrisma().interview.findFirst({
+    where: { id: interviewId, organizationId, applicationId, ...(assignedInterviewerId ? { interviewerId: assignedInterviewerId } : {}) },
+    select: { id: true, interviewerId: true, status: true },
+  });
 }
 
 function canSubmit(userId: string, role: string, interviewerId: string) {
@@ -32,7 +35,7 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     const { organizationId, applicationId, interviewId } = await context.params;
     const access = await authorize(request, organizationId, "scorecard:read");
     if (access.response) return access.response;
-    const interview = await findInterview(organizationId, applicationId, interviewId);
+    const interview = await findInterview(organizationId, applicationId, interviewId, access.role === "INTERVIEWER" ? access.user.id : undefined);
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     const scorecard = await getPrisma().interviewScorecard.findUnique({ where: { interviewId }, select: scorecardSelect });
     if (!scorecard) return NextResponse.json({ error: "Interview scorecard not found" }, { status: 404 });
@@ -48,7 +51,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     const { organizationId, applicationId, interviewId } = await context.params;
     const access = await authorize(request, organizationId, "scorecard:manage");
     if (access.response) return access.response;
-    const interview = await findInterview(organizationId, applicationId, interviewId);
+    const interview = await findInterview(organizationId, applicationId, interviewId, access.role === "INTERVIEWER" ? access.user.id : undefined);
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     if (interview.status === "CANCELLED") return NextResponse.json({ error: "Cancelled interviews cannot receive scorecards" }, { status: 409 });
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may submit this scorecard" }, { status: 403 });
@@ -68,7 +71,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     const { organizationId, applicationId, interviewId } = await context.params;
     const access = await authorize(request, organizationId, "scorecard:manage");
     if (access.response) return access.response;
-    const interview = await findInterview(organizationId, applicationId, interviewId);
+    const interview = await findInterview(organizationId, applicationId, interviewId, access.role === "INTERVIEWER" ? access.user.id : undefined);
     if (!interview) return NextResponse.json({ error: "Interview not found" }, { status: 404 });
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may edit this scorecard" }, { status: 403 });
     const input = validateScorecardInput(await request.json());

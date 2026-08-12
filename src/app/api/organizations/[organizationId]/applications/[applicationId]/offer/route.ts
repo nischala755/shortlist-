@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
-import { OfferValidationError, validateOfferInput, validateOfferStatus } from "@/features/offers/offer";
+import { OfferValidationError, validateOfferInput, validateOfferPatch, validateOfferStatus } from "@/features/offers/offer";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { notifyCandidateOfferSent } from "@/features/notifications/notifications";
@@ -74,7 +74,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     }
     if (body.title !== undefined || body.details !== undefined || body.compensationDetails !== undefined || body.expiresAt !== undefined) {
       if (existing.status !== "DRAFT") return NextResponse.json({ error: "Only draft offers can be edited" }, { status: 409 });
-      Object.assign(data, validateOfferInput(body));
+      Object.assign(data, validateOfferPatch(body));
     }
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No offer changes supplied" }, { status: 400 });
     const offer = await prisma.offer.update({ where: { id: existing.id }, data, select: offerSelect });

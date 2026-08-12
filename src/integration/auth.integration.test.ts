@@ -30,6 +30,11 @@ describe.skipIf(!runIntegrationTests)("authentication integration flow", () => {
     );
     expect(registration.status).toBe(201);
 
+    await getPrisma().user.update({
+      where: { email },
+      data: { emailVerifiedAt: new Date() },
+    });
+
     const loginResponse = await login(
       new Request("http://localhost/api/auth/login", {
         method: "POST",

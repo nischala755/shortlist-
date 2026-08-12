@@ -46,6 +46,7 @@ describe("POST /api/auth/login", () => {
           id: "user-1",
           email: "recruiter@example.com",
           passwordHash: "stored-hash",
+          emailVerifiedAt: new Date(),
         }),
       },
     } as never);
@@ -100,6 +101,7 @@ describe("POST /api/auth/login", () => {
           id: "user-1",
           email: "recruiter@example.com",
           passwordHash: "stored-hash",
+          emailVerifiedAt: new Date(),
         }),
       },
     } as never);
@@ -136,5 +138,28 @@ describe("POST /api/auth/login", () => {
       "User login failed",
       expect.any(Error),
     );
+  });
+
+  it("rejects valid credentials until the email is verified", async () => {
+    mockedGetPrisma.mockReturnValue({
+      user: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "user-1",
+          email: "recruiter@example.com",
+          passwordHash: "stored-hash",
+          emailVerifiedAt: null,
+        }),
+      },
+    } as never);
+    mockedVerifyPassword.mockResolvedValue(true);
+
+    const response = await POST(requestWithBody({
+      email: "recruiter@example.com",
+      password: "correct horse battery staple",
+    }));
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Verify your email before signing in" });
+    expect(mockedCreateSession).not.toHaveBeenCalled();
   });
 });

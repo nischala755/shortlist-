@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
-import { AssessmentValidationError, validateAssessmentInput, validateAssessmentStatus } from "@/features/coding-assessments/assessment";
+import { AssessmentValidationError, validateAssessmentPatch, validateAssessmentStatus } from "@/features/coding-assessments/assessment";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -57,7 +57,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     }
     if (body.title !== undefined || body.instructions !== undefined || body.durationMinutes !== undefined) {
       if (existing.status !== "DRAFT") return NextResponse.json({ error: "Only draft assessments can be edited" }, { status: 409 });
-      const input = validateAssessmentInput(body);
+      const input = validateAssessmentPatch(body);
       Object.assign(data, input);
     }
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No assessment changes supplied" }, { status: 400 });

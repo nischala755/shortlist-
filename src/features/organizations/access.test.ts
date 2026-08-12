@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPrisma } from "@/lib/db";
-import { getOrganizationForUser, listOrganizationMembers } from "./access";
+import { Role } from "@/generated/prisma/client";
+import { getOrganizationForUser, hasPermission, listOrganizationMembers } from "./access";
 
 vi.mock("@/lib/db", () => ({ getPrisma: vi.fn() }));
 
@@ -8,6 +9,20 @@ const mockedGetPrisma = vi.mocked(getPrisma);
 
 describe("organization access", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("reserves member management for administrators", () => {
+    expect(hasPermission(Role.ADMIN, "member:manage")).toBe(true);
+    expect(hasPermission(Role.RECRUITER, "member:manage")).toBe(false);
+    expect(hasPermission(Role.HIRING_MANAGER, "member:manage")).toBe(false);
+  });
+
+  it("limits interviewers to interview and scorecard permissions", () => {
+    expect(hasPermission(Role.INTERVIEWER, "interview:read")).toBe(true);
+    expect(hasPermission(Role.INTERVIEWER, "scorecard:manage")).toBe(true);
+    expect(hasPermission(Role.INTERVIEWER, "candidate:read")).toBe(false);
+    expect(hasPermission(Role.INTERVIEWER, "application:read")).toBe(false);
+    expect(hasPermission(Role.INTERVIEWER, "offer:read")).toBe(false);
+  });
 
   it("scopes organization lookup by membership", async () => {
     const findFirst = vi.fn().mockResolvedValue(null);

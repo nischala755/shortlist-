@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AssessmentValidationError, validateAssessmentInput, validateQuestionInput } from "./assessment";
+import { AssessmentValidationError, validateAssessmentInput, validateAssessmentPatch, validateQuestionInput } from "./assessment";
 
 describe("coding assessment validation", () => {
   it("accepts a valid assessment", () => {
@@ -8,6 +8,10 @@ describe("coding assessment validation", () => {
 
   it("rejects invalid duration", () => {
     expect(() => validateAssessmentInput({ title: "Task", instructions: "Do it", durationMinutes: 2 })).toThrow(AssessmentValidationError);
+  });
+
+  it("validates an individual assessment field during a partial update", () => {
+    expect(validateAssessmentPatch({ title: " Updated task " })).toEqual({ title: "Updated task" });
   });
 
   it("defaults question points", () => {

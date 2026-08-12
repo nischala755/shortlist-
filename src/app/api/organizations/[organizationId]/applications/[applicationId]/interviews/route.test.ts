@@ -32,6 +32,18 @@ describe("application interviews", () => {
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: "o-1", applicationId: "a-1" } }));
   });
 
+  it("limits interviewer listings to their own assignments", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-2", email: "i@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-2", role: "INTERVIEWER" }, allowed: true });
+    const findMany = vi.fn().mockResolvedValue([]);
+    mockedGetPrisma.mockReturnValue({ application: { findFirst: vi.fn().mockResolvedValue({ id: "a-1" }) }, interview: { findMany } } as never);
+
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(200);
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: "o-1", applicationId: "a-1", interviewerId: "u-2" } }));
+  });
+
   it("requires an authorized organization member as interviewer", async () => {
     const create = vi.fn();
     mockedGetPrisma.mockReturnValue({

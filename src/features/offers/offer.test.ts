@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OfferValidationError, validateCandidateOfferDecision, validateOfferInput } from "./offer";
+import { OfferValidationError, validateCandidateOfferDecision, validateOfferInput, validateOfferPatch } from "./offer";
 
 describe("offer validation", () => {
   it("accepts a future-dated offer", () => {
@@ -8,6 +8,10 @@ describe("offer validation", () => {
 
   it("rejects expired offers", () => {
     expect(() => validateOfferInput({ title: "Offer", details: "Details", expiresAt: new Date(Date.now() - 1_000).toISOString() })).toThrow(OfferValidationError);
+  });
+
+  it("validates an individual offer field during a partial update", () => {
+    expect(validateOfferPatch({ title: " Updated offer " })).toEqual({ title: "Updated offer" });
   });
 
   it("accepts only candidate response statuses", () => {

@@ -19,7 +19,7 @@ async function authorize(request: Request, organizationId: string, permission: "
   const access = await canAccessOrganization(organizationId, user.id, permission);
   if (!access.membership) return { response: NextResponse.json({ error: "Organization not found" }, { status: 404 }) };
   if (!access.allowed) return { response: NextResponse.json({ error: "Insufficient permissions" }, { status: 403 }) };
-  return { user };
+  return { user, role: access.membership.role };
 }
 
 export async function GET(request: Request, context: { params: Promise<{ organizationId: string; applicationId: string }> }) {
@@ -30,7 +30,15 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     const prisma = getPrisma();
     const application = await prisma.application.findFirst({ where: { id: applicationId, organizationId }, select: { id: true } });
     if (!application) return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    const interviews = await prisma.interview.findMany({ where: { organizationId, applicationId }, orderBy: { scheduledStart: "asc" }, select: interviewSelect });
+    const interviews = await prisma.interview.findMany({
+      where: {
+        organizationId,
+        applicationId,
+        ...(access.role === "INTERVIEWER" ? { interviewerId: access.user.id } : {}),
+      },
+      orderBy: { scheduledStart: "asc" },
+      select: interviewSelect,
+    });
     return NextResponse.json({ interviews });
   } catch (error) {
     logger.error("Interview list lookup failed", error);

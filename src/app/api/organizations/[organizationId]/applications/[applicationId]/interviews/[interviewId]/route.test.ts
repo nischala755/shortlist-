@@ -30,6 +30,18 @@ describe("application interview item", () => {
     expect(findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "i-1", organizationId: "o-1", applicationId: "a-1" } }));
   });
 
+  it("limits interviewer lookup to their own assignment", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-2", email: "i@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-2", role: "INTERVIEWER" }, allowed: true });
+    const findFirst = vi.fn().mockResolvedValue(null);
+    mockedGetPrisma.mockReturnValue({ interview: { findFirst } } as never);
+
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(404);
+    expect(findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "i-1", organizationId: "o-1", applicationId: "a-1", interviewerId: "u-2" } }));
+  });
+
   it("cancels instead of deleting the interview record", async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
     mockedGetPrisma.mockReturnValue({ interview: { updateMany } } as never);

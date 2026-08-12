@@ -37,11 +37,18 @@ export async function POST(request: Request) {
   try {
     const user = await getPrisma().user.findUnique({
       where: { email: credentials.email },
-      select: { id: true, email: true, passwordHash: true },
+      select: { id: true, email: true, passwordHash: true, emailVerifiedAt: true },
     });
 
     if (!user || !(await verifyPassword(credentials.password, user.passwordHash))) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
+
+    if (!user.emailVerifiedAt) {
+      return NextResponse.json(
+        { error: "Verify your email before signing in" },
+        { status: 403 },
+      );
     }
 
     const session = await createSession(user.id);

@@ -49,11 +49,11 @@ export async function getCurrentSession(request: Request) {
     select: {
       id: true,
       expiresAt: true,
-      user: { select: { id: true, email: true } },
+      user: { select: { id: true, email: true, emailVerifiedAt: true } },
     },
   });
 
-  if (!session || session.expiresAt <= new Date()) {
+  if (!session || session.expiresAt <= new Date() || !session.user.emailVerifiedAt) {
     return null;
   }
 
@@ -62,7 +62,10 @@ export async function getCurrentSession(request: Request) {
     data: { lastUsedAt: new Date() },
   });
 
-  return session;
+  return {
+    ...session,
+    user: { id: session.user.id, email: session.user.email },
+  };
 }
 
 export async function getCurrentUser(request: Request) {

@@ -19,7 +19,10 @@ describe("PATCH application stage", () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "r@example.com" });
     mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "RECRUITER" }, allowed: true });
     const transaction = {
-      application: { update: vi.fn().mockResolvedValue({ id: "a-1", currentStage: "SCREENING", updatedAt: new Date() }) },
+      application: {
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        findUniqueOrThrow: vi.fn().mockResolvedValue({ id: "a-1", currentStage: "SCREENING", updatedAt: new Date() }),
+      },
       applicationStageHistory: { create: vi.fn().mockResolvedValue({}) },
     };
     mockedGetPrisma.mockReturnValue({
@@ -30,6 +33,10 @@ describe("PATCH application stage", () => {
     const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ stage: "SCREENING" }) }), { params: Promise.resolve({ organizationId: "o-1", applicationId: "a-1" }) });
 
     expect(response.status).toBe(200);
+    expect(transaction.application.updateMany).toHaveBeenCalledWith({
+      where: { id: "a-1", organizationId: "o-1", currentStage: "APPLIED" },
+      data: { currentStage: "SCREENING" },
+    });
     expect(transaction.applicationStageHistory.create).toHaveBeenCalledWith({
       data: { applicationId: "a-1", changedById: "u-1", fromStage: "APPLIED", toStage: "SCREENING" },
     });
@@ -43,5 +50,23 @@ describe("PATCH application stage", () => {
     const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ stage: "HIRED" }) }), { params: Promise.resolve({ organizationId: "o-1", applicationId: "a-1" }) });
 
     expect(response.status).toBe(409);
+  });
+
+  it("rejects a transition when the stored stage changed concurrently", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "r@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "RECRUITER" }, allowed: true });
+    const transaction = {
+      application: { updateMany: vi.fn().mockResolvedValue({ count: 0 }), findUniqueOrThrow: vi.fn() },
+      applicationStageHistory: { create: vi.fn() },
+    };
+    mockedGetPrisma.mockReturnValue({
+      application: { findFirst: vi.fn().mockResolvedValue({ id: "a-1", currentStage: "APPLIED" }) },
+      $transaction: vi.fn(async (callback) => callback(transaction)),
+    } as never);
+
+    const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ stage: "SCREENING" }) }), { params: Promise.resolve({ organizationId: "o-1", applicationId: "a-1" }) });
+
+    expect(response.status).toBe(409);
+    expect(transaction.applicationStageHistory.create).not.toHaveBeenCalled();
   });
 });
