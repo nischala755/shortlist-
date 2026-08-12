@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ApplicationValidationError,
   canTransitionApplicationStage,
+  nextApplicationStages,
   validateApplicationInput,
   validateApplicationStage,
 } from "./application";
@@ -23,5 +24,10 @@ describe("validateApplicationInput", () => {
     expect(canTransitionApplicationStage("APPLIED", "OFFER")).toBe(false);
     expect(canTransitionApplicationStage("HIRED", "INTERVIEW")).toBe(false);
     expect(() => validateApplicationStage("UNKNOWN")).toThrow(ApplicationValidationError);
+  });
+
+  it("exposes only the valid next stages for the board", () => {
+    expect(nextApplicationStages("SHORTLISTED")).toEqual(["ASSESSMENT", "INTERVIEW"]);
+    expect(nextApplicationStages("HIRED")).toEqual([]);
   });
 });

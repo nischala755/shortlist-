@@ -22,6 +22,10 @@ const allowedTransitions: Record<ApplicationStageValue, readonly ApplicationStag
   HIRED: [],
 };
 
+export function nextApplicationStages(current: ApplicationStageValue) {
+  return allowedTransitions[current];
+}
+
 export class ApplicationValidationError extends Error {
   constructor(message: string) {
     super(message);

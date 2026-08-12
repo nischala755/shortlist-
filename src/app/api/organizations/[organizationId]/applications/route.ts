@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
-import { ApplicationValidationError, validateApplicationInput } from "@/features/applications/application";
+import { ApplicationValidationError, validateApplicationInput, validateApplicationStage } from "@/features/applications/application";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -16,7 +16,8 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     if (!access.membership) return NextResponse.json({ error: "Organization not found" }, { status: 404 });
     if (!access.allowed) return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
 
-    const stage = new URL(request.url).searchParams.get("stage") ?? undefined;
+    const requestedStage = new URL(request.url).searchParams.get("stage");
+    const stage = requestedStage ? validateApplicationStage(requestedStage) : undefined;
     const applications = await getPrisma().application.findMany({
       where: { organizationId, ...(stage ? { currentStage: stage as never } : {}) },
       orderBy: { createdAt: "desc" },
@@ -31,6 +32,7 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     });
     return NextResponse.json({ applications });
   } catch (error) {
+    if (error instanceof ApplicationValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
     logger.error("Application list lookup failed", error);
     return NextResponse.json({ error: "Unable to list applications" }, { status: 500 });
   }

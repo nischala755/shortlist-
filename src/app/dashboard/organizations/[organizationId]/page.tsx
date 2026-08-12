@@ -47,7 +47,7 @@ export default async function OrganizationWorkspacePage({ params }: { params: Pr
       <aside className="workspace-sidebar">
         <Brand />
         <div className="workspace-identity"><span>{membership.organization.name.slice(0, 2).toUpperCase()}</span><div><strong>{membership.organization.name}</strong><small>{membership.role.replaceAll("_", " ").toLowerCase()}</small></div></div>
-        <nav aria-label="Workspace navigation"><Link className="active" href={`/dashboard/organizations/${organizationId}`}><span aria-hidden="true">J</span>Jobs</Link><Link href={`/dashboard/organizations/${organizationId}/candidates`}><span aria-hidden="true">C</span>Candidates</Link><Link href="/dashboard"><span aria-hidden="true">Back</span>All organizations</Link></nav>
+        <nav aria-label="Workspace navigation"><Link className="active" href={`/dashboard/organizations/${organizationId}`}><span aria-hidden="true">J</span>Jobs</Link><Link href={`/dashboard/organizations/${organizationId}/candidates`}><span aria-hidden="true">C</span>Candidates</Link><Link href={`/dashboard/organizations/${organizationId}/pipeline`}><span aria-hidden="true">P</span>Pipeline</Link><Link href="/dashboard"><span aria-hidden="true">Back</span>All organizations</Link></nav>
         <p className="workspace-boundary">Hiring data in this workspace is isolated from every other organization.</p>
       </aside>
       <div className="workspace-content">

@@ -80,4 +80,16 @@ describe("/api/organizations/:organizationId/applications", () => {
     expect(response.status).toBe(200);
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: "org-1", currentStage: "SCREENING" } }));
   });
+
+  it("rejects an unknown stage filter before querying applications", async () => {
+    mockedGetCurrentUser.mockResolvedValue(user);
+    mockedCanAccess.mockResolvedValue(access);
+    const findMany = vi.fn();
+    mockedGetPrisma.mockReturnValue({ application: { findMany } } as never);
+
+    const response = await GET(new Request("http://localhost/api/organizations/org-1/applications?stage=UNKNOWN"), { params: Promise.resolve({ organizationId: "org-1" }) });
+
+    expect(response.status).toBe(400);
+    expect(findMany).not.toHaveBeenCalled();
+  });
 });
