@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export const maxResumeSizeBytes = 10 * 1024 * 1024;
 export const allowedResumeMimeTypes = [
@@ -27,7 +28,36 @@ export function validateResumeFile(file: File) {
 }
 
 function storageRoot() {
-  return path.resolve(process.env.RESUME_STORAGE_PATH ?? "storage/resumes");
+  return path.resolve(
+    /* turbopackIgnore: true */
+    process.env.RESUME_STORAGE_PATH ?? "storage/resumes",
+  );
+}
+
+function s3Config() {
+  const bucket = process.env.S3_BUCKET;
+  if (!bucket) throw new Error("S3_BUCKET is required");
+  const endpoint = process.env.S3_ENDPOINT;
+  const client = new S3Client({
+    region: process.env.S3_REGION ?? "auto",
+    ...(endpoint
+      ? {
+          endpoint,
+          forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+        }
+      : {}),
+  });
+  return { bucket, client };
+}
+
+function isS3Storage() {
+  return process.env.RESUME_STORAGE_DRIVER === "s3";
+}
+
+function validateStorageKey(storageKey: string) {
+  if (!/^[0-9a-f-]{36}\.(pdf|docx)$/i.test(storageKey)) {
+    throw new ResumeValidationError("Resume storage key is invalid");
+  }
 }
 
 export async function saveResume(file: File) {
@@ -36,10 +66,26 @@ export async function saveResume(file: File) {
   const storageKey = `${randomUUID()}${extension === ".docx" ? ".docx" : ".pdf"}`;
   const contents = Buffer.from(await file.arrayBuffer());
   const sha256 = createHash("sha256").update(contents).digest("hex");
-  const root = storageRoot();
-
-  await mkdir(root, { recursive: true });
-  await writeFile(path.join(root, storageKey), contents, { flag: "wx" });
+  if (isS3Storage()) {
+    const { bucket, client } = s3Config();
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: storageKey,
+        Body: contents,
+        ContentType: file.type,
+        Metadata: { sha256 },
+      }),
+    );
+  } else {
+    const root = storageRoot();
+    await mkdir(root, { recursive: true });
+    await writeFile(
+      path.join(/* turbopackIgnore: true */ root, storageKey),
+      contents,
+      { flag: "wx" },
+    );
+  }
 
   return {
     storageKey,
@@ -51,15 +97,37 @@ export async function saveResume(file: File) {
 }
 
 export async function removeResume(storageKey: string) {
-  await rm(path.join(storageRoot(), storageKey), { force: true });
+  validateStorageKey(storageKey);
+  if (isS3Storage()) {
+    const { bucket, client } = s3Config();
+    await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: storageKey }));
+    return;
+  }
+  await rm(
+    path.join(
+      /* turbopackIgnore: true */
+      storageRoot(),
+      storageKey,
+    ),
+    { force: true },
+  );
 }
 
 export async function readResume(storageKey: string) {
+  validateStorageKey(storageKey);
+  if (isS3Storage()) {
+    const { bucket, client } = s3Config();
+    const object = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: storageKey }),
+    );
+    if (!object.Body) throw new ResumeValidationError("Resume object is empty");
+    return Buffer.from(await object.Body.transformToByteArray());
+  }
   const root = storageRoot();
   const filePath = path.resolve(root, storageKey);
   const relativePath = path.relative(root, filePath);
   if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
     throw new ResumeValidationError("Resume storage key is invalid");
   }
-  return readFile(filePath);
+  return readFile(/* turbopackIgnore: true */ filePath);
 }

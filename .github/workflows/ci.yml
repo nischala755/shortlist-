@@ -1,0 +1,45 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: evidencehire_test
+          POSTGRES_USER: evidencehire
+          POSTGRES_PASSWORD: evidencehire
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evidencehire -d evidencehire_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      APP_URL: http://localhost:3000
+      DATABASE_URL: postgresql://evidencehire:evidencehire@localhost:5432/evidencehire_test?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:migrate:deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --maxWorkers=1
+      - run: npm run build
+      - run: npm audit --omit=dev

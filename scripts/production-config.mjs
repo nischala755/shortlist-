@@ -1,11 +1,6 @@
-type ProductionEnvironment = Partial<Record<string, string | undefined>>;
-
-export function productionConfigurationErrors(
-  env: ProductionEnvironment = process.env,
-) {
-  if (env.APP_ENV !== "production") return [];
-
-  const errors: string[] = [];
+export function productionConfigurationErrors(env = process.env) {
+  const errors = [];
+  if (env.APP_ENV !== "production") errors.push("APP_ENV must be production");
   if (!env.APP_URL?.startsWith("https://")) errors.push("APP_URL must use HTTPS");
   if (
     !env.DATABASE_URL?.startsWith("postgresql://") &&

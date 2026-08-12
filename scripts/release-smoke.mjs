@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { execFileSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { rm } from "node:fs/promises";
 import pg from "pg";

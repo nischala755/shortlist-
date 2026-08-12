@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ResumeValidationError, validateResumeFile } from "./storage";
+import { readResume, ResumeValidationError, validateResumeFile } from "./storage";
 
 describe("validateResumeFile", () => {
   it("accepts PDF and DOCX files", () => {
@@ -13,5 +13,9 @@ describe("validateResumeFile", () => {
 
   it("rejects a misleading file extension", () => {
     expect(() => validateResumeFile(new File(["pdf"], "resume.docx", { type: "application/pdf" }))).toThrow(ResumeValidationError);
+  });
+
+  it("rejects storage keys outside the managed resume namespace", async () => {
+    await expect(readResume("../.env")).rejects.toThrow(ResumeValidationError);
   });
 });
