@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { rm } from "node:fs/promises";
 import pg from "pg";
@@ -13,9 +13,11 @@ const password = "ReleaseSmoke!2026";
 const databaseUrl = process.env.DATABASE_URL?.replace(/\?schema=[^&]+(&|$)/, "$1");
 if (!databaseUrl) throw new Error("DATABASE_URL is required for release smoke tests");
 const pool = new pg.Pool({ connectionString: databaseUrl });
-const server = process.platform === "win32"
-  ? spawn(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", `npm.cmd run dev -- -p ${port}`], { stdio: "ignore" })
-  : spawn("npm", ["run", "dev", "--", "-p", port], { stdio: "ignore" });
+const server = spawn(
+  process.execPath,
+  ["node_modules/next/dist/bin/next", "dev", "-p", port],
+  { stdio: "ignore" },
+);
 const cookies = new Map();
 function cookie(name) { return cookies.get(name) ?? ""; }
 async function request(path, options = {}, account = "admin") { const headers = new Headers(options.headers); if (cookie(account)) headers.set("cookie", cookie(account)); const response = await fetch(`${base}${path}`, { ...options, headers }); const setCookie = response.headers.get("set-cookie"); if (setCookie) cookies.set(account, setCookie.split(";")[0]); const body = await response.json().catch(() => null); return { response, body }; }
@@ -43,6 +45,13 @@ try {
 } finally {
   if (organizationId) await pool.query('DELETE FROM "Organization" WHERE "id"=$1', [organizationId]);
   await pool.query('DELETE FROM "User" WHERE "email" = ANY($1)', [[adminEmail, outsiderEmail]]);
-  await pool.end(); server.kill();
+  await pool.end();
+  if (process.platform === "win32") {
+    execFileSync("taskkill", ["/pid", String(server.pid), "/t", "/f"], {
+      stdio: "ignore",
+    });
+  } else {
+    server.kill("SIGTERM");
+  }
   await rm(".smoke-runtime", { recursive: true, force: true }).catch(() => undefined);
 }
