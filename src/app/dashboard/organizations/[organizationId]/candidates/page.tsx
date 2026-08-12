@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { CandidateWorkspace } from "@/components/candidate-workspace";
 import { LogoutButton } from "@/components/logout-button";
+import { NotificationCenter } from "@/components/notification-center";
 import { getCurrentUser } from "@/features/auth/session";
 import { hasPermission } from "@/features/organizations/access";
 import { getPrisma } from "@/lib/db";
@@ -49,7 +50,7 @@ export default async function CandidateWorkspacePage({ params }: { params: Promi
         <p className="workspace-boundary">Candidate records are visible only to authorized members of this organization.</p>
       </aside>
       <div className="workspace-content">
-        <header className="workspace-header"><div><span className="connection-dot" />Workspace active</div><div><span>{user.email}</span><LogoutButton /></div></header>
+        <header className="workspace-header"><div><span className="connection-dot" />Workspace active</div><div><NotificationCenter organizationId={organizationId} /><span>{user.email}</span><LogoutButton /></div></header>
         <CandidateWorkspace
           organizationId={organizationId}
           organizationName={membership.organization.name}

@@ -4,6 +4,7 @@ import { OfferValidationError, validateCandidateOfferDecision } from "@/features
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { recordAuditLog } from "@/features/audit/audit";
+import { notifyOfferCreatorOfResponse } from "@/features/notifications/notifications";
 
 const candidateOfferSelect = { id: true, title: true, details: true, compensationDetails: true, expiresAt: true, status: true, sentAt: true, respondedAt: true, responseNote: true } as const;
 
@@ -39,6 +40,11 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     const result = await prisma.offer.updateMany({ where: { id: offer.id, status: "SENT" }, data: { status: input.status, responseNote: input.responseNote, respondedAt: new Date() } });
     if (result.count !== 1) return NextResponse.json({ error: "This offer is no longer awaiting a response" }, { status: 409 });
     const updated = await prisma.offer.findUniqueOrThrow({ where: { id: offer.id }, select: candidateOfferSelect });
+    try {
+      await notifyOfferCreatorOfResponse({ organizationId, applicationId, offerId: offer.id, status: input.status });
+    } catch (notificationError) {
+      logger.error("Offer response notification failed", notificationError);
+    }
     try {
       await recordAuditLog({ organizationId, actorId: access.user.id, action: `OFFER_${input.status}`, entityType: "Offer", entityId: offer.id, metadata: { applicationId } });
     } catch (auditError) {

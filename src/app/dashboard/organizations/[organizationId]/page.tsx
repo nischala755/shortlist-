@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { JobWorkspace } from "@/components/job-workspace";
 import { LogoutButton } from "@/components/logout-button";
+import { NotificationCenter } from "@/components/notification-center";
 import { getCurrentUser } from "@/features/auth/session";
 import { hasPermission } from "@/features/organizations/access";
 import { getPrisma } from "@/lib/db";
@@ -51,7 +52,7 @@ export default async function OrganizationWorkspacePage({ params }: { params: Pr
         <p className="workspace-boundary">Hiring data in this workspace is isolated from every other organization.</p>
       </aside>
       <div className="workspace-content">
-        <header className="workspace-header"><div><span className="connection-dot" />Workspace active</div><div><span>{user.email}</span><LogoutButton /></div></header>
+        <header className="workspace-header"><div><span className="connection-dot" />Workspace active</div><div><NotificationCenter organizationId={organizationId} /><span>{user.email}</span><LogoutButton /></div></header>
         <JobWorkspace
           organizationId={organizationId}
           organizationName={membership.organization.name}

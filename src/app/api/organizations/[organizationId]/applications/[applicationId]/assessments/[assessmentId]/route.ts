@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { AssessmentValidationError, canTransitionAssessmentStatus, validateAssessmentPatch, validateAssessmentStatus } from "@/features/coding-assessments/assessment";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { notifyCandidateAssessmentAssigned } from "@/features/notifications/notifications";
 
 const assessmentSelect = {
   id: true, title: true, instructions: true, durationMinutes: true, status: true, createdAt: true, updatedAt: true,
@@ -68,6 +69,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     }
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No assessment changes supplied" }, { status: 400 });
     const assessment = await getPrisma().codingAssessment.update({ where: { id: assessmentId }, data, select: assessmentSelect });
+    if (data.status === "ASSIGNED") {
+      try {
+        await notifyCandidateAssessmentAssigned({ organizationId, applicationId, assessmentId, title: assessment.title });
+      } catch (notificationError) {
+        logger.error("Assessment assignment notification failed", notificationError);
+      }
+    }
     return NextResponse.json({ assessment });
   } catch (error) {
     if (error instanceof AssessmentValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
