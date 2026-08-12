@@ -34,7 +34,14 @@ export async function PATCH(
     const role = validateOrganizationRole(
       typeof body === "object" && body !== null && "role" in body ? body.role : undefined,
     );
-    const membership = await getPrisma().membership.updateMany({
+    const prisma = getPrisma();
+    const existing = await prisma.membership.findUnique({ where: { organizationId_userId: { organizationId, userId } }, select: { role: true } });
+    if (!existing) return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    if (existing.role === "ADMIN" && role !== "ADMIN") {
+      const adminCount = await prisma.membership.count({ where: { organizationId, role: "ADMIN" } });
+      if (adminCount <= 1) return NextResponse.json({ error: "An organization must retain at least one admin" }, { status: 409 });
+    }
+    const membership = await prisma.membership.updateMany({
       where: { organizationId, userId },
       data: { role },
     });

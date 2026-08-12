@@ -45,6 +45,10 @@ export function validateAssessmentStatus(value: unknown) {
   return value as CodingAssessmentStatus;
 }
 
+export function canTransitionAssessmentStatus(current: CodingAssessmentStatus, next: CodingAssessmentStatus) {
+  return (current === "DRAFT" && next === "ASSIGNED") || (current === "ASSIGNED" && next === "CLOSED");
+}
+
 export function validateQuestionInput(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new AssessmentValidationError("Question data must be an object");
   const input = value as Record<string, unknown>;

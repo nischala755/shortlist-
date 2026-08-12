@@ -34,4 +34,14 @@ describe("coding assessment item", () => {
     expect(response.status).toBe(200);
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: { title: "Updated task" } }));
   });
+
+  it("rejects closing before a final submission", async () => {
+    const update = vi.fn();
+    mockedGetPrisma.mockReturnValue({ codingAssessment: { findFirst: vi.fn().mockResolvedValue({ id: "assessment-1", status: "ASSIGNED" }), update }, codingSubmission: { findUnique: vi.fn().mockResolvedValue({ status: "DRAFT" }) } } as never);
+
+    const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ status: "CLOSED" }) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(409);
+    expect(update).not.toHaveBeenCalled();
+  });
 });

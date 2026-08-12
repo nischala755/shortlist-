@@ -9,6 +9,7 @@ const assessmentSelect = {
   id: true, title: true, instructions: true, durationMinutes: true, status: true, createdAt: true, updatedAt: true,
   createdBy: { select: { id: true, email: true } },
   questions: { orderBy: { position: "asc" as const }, select: { id: true, prompt: true, language: true, starterCode: true, points: true, position: true } },
+  submission: { select: { id: true, status: true, answersJson: true, startedAt: true, submittedAt: true, updatedAt: true, submittedBy: { select: { id: true, email: true } } } },
 } as const;
 
 async function authorize(request: Request, organizationId: string, permission: "assessment:read" | "assessment:manage") {

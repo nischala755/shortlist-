@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/features/auth/session";
 import { canAccessOrganization } from "@/features/organizations/access";
-import { AssessmentValidationError, validateAssessmentPatch, validateAssessmentStatus } from "@/features/coding-assessments/assessment";
+import { AssessmentValidationError, canTransitionAssessmentStatus, validateAssessmentPatch, validateAssessmentStatus } from "@/features/coding-assessments/assessment";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -9,6 +9,7 @@ const assessmentSelect = {
   id: true, title: true, instructions: true, durationMinutes: true, status: true, createdAt: true, updatedAt: true,
   createdBy: { select: { id: true, email: true } },
   questions: { orderBy: { position: "asc" as const }, select: { id: true, prompt: true, language: true, starterCode: true, points: true, position: true } },
+  submission: { select: { id: true, status: true, answersJson: true, startedAt: true, submittedAt: true, updatedAt: true, submittedBy: { select: { id: true, email: true } } } },
 } as const;
 
 async function authorize(request: Request, organizationId: string, permission: "assessment:read" | "assessment:manage") {
@@ -49,9 +50,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     const data: Record<string, unknown> = {};
     if (body.status !== undefined) {
       const status = validateAssessmentStatus(body.status);
+      if (!canTransitionAssessmentStatus(existing.status, status)) return NextResponse.json({ error: `Invalid assessment transition from ${existing.status} to ${status}` }, { status: 409 });
       if (status === "ASSIGNED") {
         const questionCount = await getPrisma().codingQuestion.count({ where: { assessmentId } });
         if (questionCount === 0) return NextResponse.json({ error: "An assessment needs at least one question before assignment" }, { status: 409 });
+      }
+      if (status === "CLOSED") {
+        const submission = await getPrisma().codingSubmission.findUnique({ where: { assessmentId }, select: { status: true } });
+        if (submission?.status !== "SUBMITTED") return NextResponse.json({ error: "A final submission is required before closing the assessment" }, { status: 409 });
       }
       data.status = status;
     }

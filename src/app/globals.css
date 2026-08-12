@@ -392,6 +392,59 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
 .scorecard-modal { width: min(720px, 100%); }
 .criterion-row { border-bottom: 1px solid #e8e9e3; padding-bottom: 12px; }
 
+.member-invite { display: grid; margin-top: 34px; grid-template-columns: 1fr 1.6fr; gap: 32px; border: 1px solid #cdd5cc; border-radius: 11px; padding: 24px; background: #edf2ec; }
+.member-invite h2 { margin: 0; font-family: Georgia, serif; font-size: 25px; font-weight: 500; }
+.member-invite p, .team-note { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.member-invite form { display: grid; grid-template-columns: 1.2fr .8fr auto; align-items: end; gap: 10px; }
+.member-invite label { display: grid; gap: 7px; color: #3d4942; font-size: 11px; font-weight: 750; }
+.member-table { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.member-table > header, .member-table > article { display: grid; grid-template-columns: 1.5fr 1fr .7fr; align-items: center; gap: 18px; padding: 13px 20px; }
+.member-table > header { background: #eceee8; color: var(--muted); font-size: 9px; font-weight: 850; text-transform: uppercase; }
+.member-table > article + article { border-top: 1px solid #e8e9e3; }
+.member-table article > div:first-child { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.member-table strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.member-table small { display: block; margin-top: 3px; color: var(--green); font-size: 8px; }
+.member-table select { max-width: 190px; }
+.member-table time, .member-table article > div:nth-child(2) > span { color: var(--muted); font-size: 10px; text-transform: capitalize; }
+.assessment-filter { margin-top: 30px; }
+.assessment-filter label { display: grid; max-width: 480px; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 750; }
+.assessment-editor { display: grid; margin-top: 20px; grid-template-columns: 220px 1fr; gap: 30px; border: 1px solid #cdd5cc; border-radius: 11px; padding: 24px; background: #edf2ec; }
+.assessment-editor h2 { margin: 0; font-family: Georgia, serif; font-size: 26px; font-weight: 500; }
+.assessment-editor form, .question-editor { display: grid; gap: 12px; }
+.assessment-editor label, .question-editor label { display: grid; gap: 7px; color: #3d4942; font-size: 11px; font-weight: 750; }
+.assessment-list { display: grid; gap: 14px; margin-top: 20px; }
+.assessment-card { overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.assessment-card > header { display: flex; justify-content: space-between; gap: 25px; padding: 22px; }
+.assessment-card > header h2 { margin: 8px 0 6px; font-size: 18px; }
+.assessment-card > header p { max-width: 760px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.assessment-card > header > div:last-child { text-align: right; }
+.assessment-card > header > div:last-child strong, .assessment-card > header > div:last-child span { display: block; }
+.assessment-card > header > div:last-child strong { font-family: Georgia, serif; font-size: 24px; font-weight: 500; }
+.assessment-card > header > div:last-child span { color: var(--muted); font-size: 8px; }
+.assessment-status { border-radius: 99px; padding: 4px 7px; font-size: 8px; font-weight: 850; text-transform: uppercase; }
+.assessment-status.draft { background: #eee9da; color: #796735; }
+.assessment-status.assigned { background: #e5edf3; color: #35627c; }
+.assessment-status.closed { background: var(--green-light); color: var(--green); }
+.assessment-meta { display: flex; gap: 18px; border-block: 1px solid #ecece7; padding: 10px 22px; color: var(--muted); font-size: 9px; }
+.question-list { display: grid; gap: 10px; padding: 18px 22px; }
+.question-list > section { border: 1px solid #e4e5df; border-radius: 7px; padding: 13px; background: #fafaf7; }
+.question-list section > header { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; }
+.question-list section > header span, .question-list section > small { color: var(--muted); font-size: 8px; }
+.question-list pre, .submitted-answer pre { overflow-x: auto; margin: 10px 0 0; border-radius: 5px; padding: 10px; background: #26322c; color: #e7eee8; font-size: 10px; line-height: 1.5; white-space: pre-wrap; }
+.submitted-answer { margin-top: 12px; border-top: 1px solid #dfe1da; padding-top: 10px; }
+.submitted-answer > span { color: var(--green); font-size: 8px; font-weight: 850; text-transform: uppercase; }
+.question-editor { border-top: 1px solid var(--line); padding: 18px 22px; background: #f2f3ed; }
+.question-editor .field-pair { display: grid; grid-template-columns: 1fr 130px; gap: 10px; }
+.code-input { font-family: ui-monospace, monospace; }
+.question-editor .button { justify-self: start; }
+.submission-note { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 13px 22px; background: #edf3ed; }
+.submission-note strong { color: var(--green); font-size: 10px; }
+.submission-note span { color: var(--muted); font-size: 9px; }
+.assessment-card > footer { display: flex; align-items: center; justify-content: flex-end; gap: 14px; border-top: 1px solid var(--line); padding: 12px 22px; }
+.assessment-card > footer button { border: 0; border-radius: 5px; padding: 8px 10px; background: var(--green); color: white; font-size: 9px; font-weight: 800; cursor: pointer; }
+.assessment-card > footer button:disabled { opacity: .5; }
+.assessment-card > footer span { color: var(--muted); font-size: 8px; }
+
 @media (max-width: 850px) {
   .site-header nav > a:not(.button) { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; padding-top: 54px; }
@@ -423,6 +476,8 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
   .pipeline-board { grid-template-columns: repeat(7, 210px); }
   .evidence-grid { grid-template-columns: 1fr; }
   .interview-layout { grid-template-columns: 230px 1fr; }
+  .member-invite { grid-template-columns: 1fr; }
+  .member-invite form { grid-template-columns: 1fr 1fr auto; }
 }
 
 @media (max-width: 560px) {
@@ -479,6 +534,10 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
   .interview-layout > aside { border-right: 0; border-bottom: 1px solid var(--line); }
   .scorecard-review, .interview-modal .field-pair, .criterion-row { grid-template-columns: 1fr; }
   .scorecard-review small { grid-column: auto; }
+  .member-invite form, .assessment-editor { grid-template-columns: 1fr; }
+  .member-table > header { display: none; }
+  .member-table > article { grid-template-columns: 1fr; }
+  .submission-note, .assessment-card > footer { align-items: flex-start; flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {

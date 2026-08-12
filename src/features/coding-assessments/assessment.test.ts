@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AssessmentValidationError, validateAssessmentInput, validateAssessmentPatch, validateQuestionInput } from "./assessment";
+import { AssessmentValidationError, canTransitionAssessmentStatus, validateAssessmentInput, validateAssessmentPatch, validateQuestionInput } from "./assessment";
 
 describe("coding assessment validation", () => {
   it("accepts a valid assessment", () => {
@@ -16,5 +16,11 @@ describe("coding assessment validation", () => {
 
   it("defaults question points", () => {
     expect(validateQuestionInput({ prompt: "Write a function" })).toMatchObject({ prompt: "Write a function", points: 1 });
+  });
+
+  it("allows only the forward assessment lifecycle", () => {
+    expect(canTransitionAssessmentStatus("DRAFT", "ASSIGNED")).toBe(true);
+    expect(canTransitionAssessmentStatus("ASSIGNED", "CLOSED")).toBe(true);
+    expect(canTransitionAssessmentStatus("CLOSED", "ASSIGNED")).toBe(false);
   });
 });

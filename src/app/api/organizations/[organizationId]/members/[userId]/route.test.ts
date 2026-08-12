@@ -22,7 +22,7 @@ describe("PATCH /api/organizations/:organizationId/members/:userId", () => {
       allowed: true,
     });
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
-    mockedGetPrisma.mockReturnValue({ membership: { updateMany } } as never);
+    mockedGetPrisma.mockReturnValue({ membership: { findUnique: vi.fn().mockResolvedValue({ role: "INTERVIEWER" }), updateMany } } as never);
 
     const response = await PATCH(
       new Request("http://localhost", {
@@ -74,5 +74,17 @@ describe("PATCH /api/organizations/:organizationId/members/:userId", () => {
     );
 
     expect(response.status).toBe(400);
+  });
+
+  it("prevents demoting the final admin", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "admin-1", email: "a@example.com" });
+    mockedCanAccessOrganization.mockResolvedValue({ membership: { id: "membership-1", role: "ADMIN" }, allowed: true });
+    const updateMany = vi.fn();
+    mockedGetPrisma.mockReturnValue({ membership: { findUnique: vi.fn().mockResolvedValue({ role: "ADMIN" }), count: vi.fn().mockResolvedValue(1), updateMany } } as never);
+
+    const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ role: "RECRUITER" }) }), { params: Promise.resolve({ organizationId: "org-1", userId: "admin-1" }) });
+
+    expect(response.status).toBe(409);
+    expect(updateMany).not.toHaveBeenCalled();
   });
 });
