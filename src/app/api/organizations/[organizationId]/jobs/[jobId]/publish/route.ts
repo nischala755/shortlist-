@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { getJobInOrganization } from "@/features/jobs/access";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { recordAuditLogSafely } from "@/features/audit/audit";
 
 export async function POST(request: Request, context: { params: Promise<{ organizationId: string; jobId: string }> }) {
   try {
@@ -22,6 +23,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     if (requirementCount === 0) return NextResponse.json({ error: "Add at least one requirement before publishing" }, { status: 409 });
 
     const job = await getPrisma().job.update({ where: { id: jobId }, data: { status: "PUBLISHED" }, select: { id: true, status: true } });
+    await recordAuditLogSafely({ organizationId, actorId: user.id, action: "JOB_PUBLISHED", entityType: "Job", entityId: jobId });
     return NextResponse.json({ job });
   } catch (error) {
     logger.error("Job publish failed", error);

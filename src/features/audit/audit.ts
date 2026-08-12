@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export type AuditInput = {
   organizationId: string;
@@ -16,4 +17,9 @@ export function validateAuditFilter(value: string | null, name: string) {
 
 export async function recordAuditLog(input: AuditInput) {
   return getPrisma().auditLog.create({ data: { ...input, metadata: input.metadata ?? undefined } });
+}
+
+export async function recordAuditLogSafely(input: AuditInput) {
+  try { return await recordAuditLog(input); }
+  catch (error) { logger.error(`Audit persistence failed for ${input.action}`, error); return null; }
 }

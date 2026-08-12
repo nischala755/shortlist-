@@ -4,6 +4,7 @@ import { canAccessOrganization } from "@/features/organizations/access";
 import { ScorecardValidationError, validateScorecardInput } from "@/features/interview-scorecards/scorecard";
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { recordAuditLogSafely } from "@/features/audit/audit";
 
 const scorecardSelect = {
   id: true, criteriaJson: true, overallRating: true, strengths: true, concerns: true, notes: true, createdAt: true, updatedAt: true,
@@ -58,6 +59,7 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may submit this scorecard" }, { status: 403 });
     const input = validateScorecardInput(await request.json());
     const scorecard = await getPrisma().interviewScorecard.create({ data: { interviewId, submittedById: access.user.id, criteriaJson: input.criteria, overallRating: input.overallRating, strengths: input.strengths, concerns: input.concerns, notes: input.notes }, select: scorecardSelect });
+    await recordAuditLogSafely({ organizationId, actorId: access.user.id, action: "SCORECARD_SUBMITTED", entityType: "InterviewScorecard", entityId: scorecard.id, metadata: { interviewId, applicationId } });
     return NextResponse.json({ scorecard }, { status: 201 });
   } catch (error) {
     if (error instanceof ScorecardValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -78,6 +80,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     if (!canSubmit(access.user.id, access.role, interview.interviewerId)) return NextResponse.json({ error: "Only the assigned interviewer may edit this scorecard" }, { status: 403 });
     const input = validateScorecardInput(await request.json());
     const scorecard = await getPrisma().interviewScorecard.update({ where: { interviewId }, data: { criteriaJson: input.criteria, overallRating: input.overallRating, strengths: input.strengths, concerns: input.concerns, notes: input.notes }, select: scorecardSelect });
+    await recordAuditLogSafely({ organizationId, actorId: access.user.id, action: "SCORECARD_UPDATED", entityType: "InterviewScorecard", entityId: scorecard.id, metadata: { interviewId, applicationId } });
     return NextResponse.json({ scorecard });
   } catch (error) {
     if (error instanceof ScorecardValidationError) return NextResponse.json({ error: error.message }, { status: 400 });

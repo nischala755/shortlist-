@@ -5,6 +5,7 @@ import { AssessmentValidationError, canTransitionAssessmentStatus, validateAsses
 import { getPrisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { notifyCandidateAssessmentAssigned } from "@/features/notifications/notifications";
+import { recordAuditLogSafely } from "@/features/audit/audit";
 
 const assessmentSelect = {
   id: true, title: true, instructions: true, durationMinutes: true, status: true, createdAt: true, updatedAt: true,
@@ -76,6 +77,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
         logger.error("Assessment assignment notification failed", notificationError);
       }
     }
+    if (typeof data.status === "string") await recordAuditLogSafely({ organizationId, actorId: access.user.id, action: `ASSESSMENT_${data.status}`, entityType: "CodingAssessment", entityId: assessmentId, metadata: { applicationId } });
     return NextResponse.json({ assessment });
   } catch (error) {
     if (error instanceof AssessmentValidationError) return NextResponse.json({ error: error.message }, { status: 400 });

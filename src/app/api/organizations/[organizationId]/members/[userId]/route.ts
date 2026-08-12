@@ -7,6 +7,7 @@ import {
 } from "@/features/organizations/organization";
 import { logger } from "@/lib/logger";
 import { getPrisma } from "@/lib/db";
+import { recordAuditLogSafely } from "@/features/audit/audit";
 
 export async function PATCH(
   request: Request,
@@ -49,6 +50,8 @@ export async function PATCH(
     if (membership.count === 0) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
+
+    await recordAuditLogSafely({ organizationId, actorId: user.id, action: "MEMBER_ROLE_CHANGED", entityType: "Membership", entityId: userId, metadata: { fromRole: existing.role, toRole: role } });
 
     return NextResponse.json({ status: "updated", role });
   } catch (error) {
