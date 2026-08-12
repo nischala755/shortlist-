@@ -22,7 +22,7 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
     const assessment = await findAssignedAssessment(organizationId, applicationId, assessmentId, access.candidate.id);
     if (!assessment) return NextResponse.json({ error: "Assigned assessment not found" }, { status: 404 });
     const submission = await getPrisma().codingSubmission.findUnique({ where: { assessmentId }, select: { id: true, status: true, answersJson: true, startedAt: true, submittedAt: true, updatedAt: true } });
-    return NextResponse.json({ assessment, submission });
+    return NextResponse.json({ assessment: submission ? assessment : { ...assessment, questions: [] }, submission, requiresStart: !submission });
   } catch (error) {
     logger.error("Candidate portal assessment lookup failed", error);
     return NextResponse.json({ error: "Unable to load assigned assessment" }, { status: 500 });

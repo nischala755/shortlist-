@@ -17,10 +17,11 @@ export async function GET(request: Request, context: { params: Promise<{ organiz
         createdAt: true,
         updatedAt: true,
         job: { select: { id: true, title: true, description: true } },
-        codingAssessments: { where: { status: "ASSIGNED" }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, durationMinutes: true, status: true } },
+        codingAssessments: { where: { status: "ASSIGNED" }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, durationMinutes: true, status: true, submission: { select: { status: true, startedAt: true, submittedAt: true } } } },
+        offer: { select: { id: true, title: true, status: true, expiresAt: true } },
       },
     });
-    return NextResponse.json({ candidate: access.candidate, applications });
+    return NextResponse.json({ candidate: access.candidate, applications: applications.map((application) => ({ ...application, offer: application.offer?.status === "DRAFT" ? null : application.offer })) });
   } catch (error) {
     logger.error("Candidate portal application lookup failed", error);
     return NextResponse.json({ error: "Unable to load candidate applications" }, { status: 500 });

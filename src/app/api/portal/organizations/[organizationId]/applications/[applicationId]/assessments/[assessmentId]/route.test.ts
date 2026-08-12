@@ -20,7 +20,20 @@ describe("candidate portal assessment", () => {
     mockedGetPrisma.mockReturnValue({ codingAssessment: { findFirst }, codingSubmission: { findUnique: vi.fn().mockResolvedValue(null) } } as never);
     const response = await GET(new Request("http://localhost"), { params: Promise.resolve(params) });
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ assessment: { questions: [] }, submission: null, requiresStart: true });
     expect(findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "assess-1", organizationId: "o-1", applicationId: "app-1", status: "ASSIGNED", application: { candidateId: "c-1" } } }));
+  });
+
+  it("reveals questions after the candidate starts a submission", async () => {
+    mockedGetPrisma.mockReturnValue({
+      codingAssessment: { findFirst: vi.fn().mockResolvedValue({ id: "assess-1", title: "Task", durationMinutes: 60, status: "ASSIGNED", questions: [{ id: "q-1", prompt: "Solve" }] }) },
+      codingSubmission: { findUnique: vi.fn().mockResolvedValue({ id: "sub-1", status: "DRAFT", answersJson: {}, startedAt: new Date() }) },
+    } as never);
+
+    const response = await GET(new Request("http://localhost"), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ assessment: { questions: [{ id: "q-1" }] }, requiresStart: false });
   });
 
   it("creates a draft submission without executing candidate code", async () => {
