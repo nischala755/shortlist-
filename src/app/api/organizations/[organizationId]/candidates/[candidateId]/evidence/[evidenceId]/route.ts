@@ -48,7 +48,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ organ
     const existing = await prisma.candidateEvidence.findFirst({ where: { id: evidenceId, organizationId, candidateId }, select: { id: true } });
     if (!existing) return NextResponse.json({ error: "Candidate evidence not found" }, { status: 404 });
     if (input.jobRequirementId) {
-      const requirement = await prisma.jobRequirement.findFirst({ where: { id: input.jobRequirementId, job: { organizationId } }, select: { id: true } });
+      const requirement = await prisma.jobRequirement.findFirst({
+        where: { id: input.jobRequirementId, job: { organizationId, applications: { some: { candidateId } } } },
+        select: { id: true },
+      });
       if (!requirement) return NextResponse.json({ error: "Job requirement not found" }, { status: 404 });
     }
     const evidence = await prisma.candidateEvidence.update({ where: { id: evidenceId }, data: input, select: evidenceSelect });

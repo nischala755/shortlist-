@@ -40,6 +40,19 @@ describe("candidate evidence item", () => {
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "e-1" }, data: expect.objectContaining({ sourceType: "INTERVIEW" }) }));
   });
 
+  it("scopes a replacement requirement to a job the candidate applied for", async () => {
+    const requirementLookup = vi.fn().mockResolvedValue({ id: "req-1" });
+    const update = vi.fn().mockResolvedValue({ id: "e-1" });
+    mockedGetPrisma.mockReturnValue({ candidateEvidence: { findFirst: vi.fn().mockResolvedValue({ id: "e-1" }), update }, jobRequirement: { findFirst: requirementLookup } } as never);
+
+    const response = await PATCH(new Request("http://localhost", { method: "PATCH", body: JSON.stringify({ title: "Updated", details: "Observed", sourceType: "MANUAL", jobRequirementId: "req-1" }) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(200);
+    expect(requirementLookup).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "req-1", job: { organizationId: "o-1", applications: { some: { candidateId: "c-1" } } } },
+    }));
+  });
+
   it("deletes only an existing scoped evidence item", async () => {
     const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
     mockedGetPrisma.mockReturnValue({ candidateEvidence: { deleteMany } } as never);

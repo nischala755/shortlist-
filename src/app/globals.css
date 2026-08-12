@@ -284,6 +284,58 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
 .stage-timeline small { margin-top: 5px; color: #88918b; font-size: 9px; }
 .human-decision-note { border-left: 2px solid var(--orange); padding-left: 12px; color: var(--muted); font-size: 11px; line-height: 1.55; }
 
+.evidence-main { width: min(1280px, calc(100% - 64px)); }
+.evidence-controls { display: grid; margin-top: 34px; grid-template-columns: 1fr 1fr; gap: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 18px; background: var(--surface); }
+.evidence-controls label { display: grid; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 750; }
+.coverage-banner { display: grid; margin-top: 20px; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px 22px; border: 1px solid #cad8cd; border-radius: 10px; padding: 20px 22px; background: #edf3ed; }
+.coverage-banner > div:first-child { display: flex; align-items: baseline; gap: 10px; }
+.coverage-banner span, .coverage-banner p, .coverage-banner small { color: var(--muted); font-size: 11px; }
+.coverage-banner strong { color: var(--green); font-family: Georgia, serif; font-size: 28px; font-weight: 500; }
+.coverage-banner p { margin: 0; white-space: nowrap; }
+.coverage-banner small { grid-column: 1 / -1; }
+.coverage-meter { height: 7px; overflow: hidden; border-radius: 99px; background: #d9e0d9; }
+.coverage-meter i { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+.evidence-grid { display: grid; margin-top: 18px; grid-template-columns: .85fr 1.15fr; gap: 16px; }
+.analysis-panel, .matrix-panel, .evidence-editor { border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.analysis-panel, .matrix-panel { min-width: 0; padding: 24px; }
+.analysis-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.analysis-panel h2, .matrix-panel h2, .evidence-editor h2 { margin: 0; font-family: Georgia, serif; font-size: 27px; font-weight: 500; }
+.analysis-content { margin-top: 22px; }
+.analysis-content h3 { margin: 24px 0 8px; font-size: 12px; }
+.analysis-content > p, .quote-list, .missing-list { color: #536058; font-size: 12px; line-height: 1.6; }
+.analysis-content > small { display: block; margin-top: 22px; color: #929994; font-size: 9px; }
+.ai-boundary { border-left: 3px solid var(--orange); padding: 10px 12px; background: #f8eee8; }
+.ai-boundary strong, .ai-boundary span { display: block; }
+.ai-boundary strong { color: #8a4b30; font-size: 11px; }
+.ai-boundary span { margin-top: 4px; color: #76655a; font-size: 10px; line-height: 1.5; }
+.skill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-list span { border-radius: 99px; padding: 5px 8px; background: var(--green-light); color: var(--green); font-size: 9px; font-weight: 750; }
+.quote-list, .missing-list { margin: 0; padding-left: 18px; }
+.quote-list li + li, .missing-list li + li { margin-top: 7px; }
+.panel-empty { margin: 24px 0 0; border: 1px dashed #d0d3cb; border-radius: 8px; padding: 34px 18px; color: var(--muted); font-size: 12px; text-align: center; }
+.matrix-panel > header { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+.matrix-list { display: grid; gap: 12px; margin-top: 18px; }
+.matrix-list > article { border: 1px solid var(--line); border-left: 3px solid var(--orange); border-radius: 8px; padding: 15px; }
+.matrix-list > article.covered { border-left-color: var(--green); }
+.matrix-list > article > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.matrix-list > article > header span { color: var(--orange); font-size: 9px; font-weight: 850; text-transform: uppercase; }
+.matrix-list > article.covered > header span { color: var(--green); }
+.matrix-list h3 { margin: 5px 0 0; font-size: 13px; }
+.matrix-list > article > header > strong { display: grid; min-width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #e8eae3; color: var(--muted); font-size: 10px; }
+.matrix-list > article > p { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.evidence-item { position: relative; margin-top: 12px; border-top: 1px solid #e7e8e2; padding-top: 12px; }
+.evidence-item > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.evidence-item strong { font-size: 11px; }
+.evidence-item span { color: var(--muted); font-size: 8px; }
+.evidence-item p { margin: 7px 35px 0 0; color: #4e5a53; font-size: 10px; line-height: 1.5; }
+.evidence-item button { position: absolute; right: 0; bottom: 0; border: 0; background: transparent; color: var(--danger); font-size: 8px; cursor: pointer; }
+.evidence-editor { display: grid; margin-top: 16px; grid-template-columns: 260px 1fr; gap: 34px; padding: 26px; background: #edf2ec; }
+.evidence-editor > div > p:last-child { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.evidence-editor form { display: grid; gap: 14px; }
+.evidence-editor label { display: grid; gap: 7px; color: #3d4942; font-size: 11px; font-weight: 750; }
+.evidence-editor .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.evidence-editor .button { justify-self: start; }
+
 @media (max-width: 850px) {
   .site-header nav > a:not(.button) { display: none; }
   .hero { min-height: auto; grid-template-columns: 1fr; padding-top: 54px; }
@@ -313,6 +365,7 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
   .candidate-sections { grid-template-columns: 1fr; }
   .candidate-sections > section + section { border-top: 1px solid var(--line); border-left: 0; }
   .pipeline-board { grid-template-columns: repeat(7, 210px); }
+  .evidence-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {
@@ -359,6 +412,10 @@ select { width: 100%; min-height: 40px; border: 1px solid #cfd3ca; border-radius
   .pipeline-summary small { width: 100%; margin-left: 0; }
   .pipeline-filter { min-width: 0; }
   .pipeline-drawer { padding: 24px 20px; }
+  .evidence-controls, .evidence-editor, .evidence-editor .field-pair { grid-template-columns: 1fr; }
+  .coverage-banner { grid-template-columns: 1fr; }
+  .coverage-banner small { grid-column: auto; }
+  .coverage-banner p { white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {

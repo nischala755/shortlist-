@@ -43,4 +43,20 @@ describe("candidate evidence collection", () => {
     expect(response.status).toBe(404);
     expect(create).not.toHaveBeenCalled();
   });
+
+  it("scopes a linked requirement to a job the candidate applied for", async () => {
+    mockedGetCurrentUser.mockResolvedValue({ id: "u-1", email: "r@example.com" });
+    mockedCanAccess.mockResolvedValue({ membership: { id: "m-1", role: "RECRUITER" }, allowed: true });
+    const requirementLookup = vi.fn().mockResolvedValue({ id: "req-1" });
+    mockedGetPrisma.mockReturnValue({
+      candidate: { findFirst: vi.fn().mockResolvedValue({ id: "c-1" }) },
+      jobRequirement: { findFirst: requirementLookup },
+      candidateEvidence: { create: vi.fn().mockResolvedValue({ id: "e-1" }) },
+    } as never);
+
+    const response = await POST(new Request("http://localhost", { method: "POST", body: JSON.stringify({ title: "Skill", details: "Observed", sourceType: "MANUAL", jobRequirementId: "req-1" }) }), { params: Promise.resolve(params) });
+
+    expect(response.status).toBe(201);
+    expect(requirementLookup).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "req-1", job: { organizationId: "o-1", applications: { some: { candidateId: "c-1" } } } } }));
+  });
 });

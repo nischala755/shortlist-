@@ -45,7 +45,10 @@ export async function POST(request: Request, context: { params: Promise<{ organi
     const candidate = await prisma.candidate.findFirst({ where: { id: candidateId, organizationId }, select: { id: true } });
     if (!candidate) return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
     if (input.jobRequirementId) {
-      const requirement = await prisma.jobRequirement.findFirst({ where: { id: input.jobRequirementId, job: { organizationId } }, select: { id: true } });
+      const requirement = await prisma.jobRequirement.findFirst({
+        where: { id: input.jobRequirementId, job: { organizationId, applications: { some: { candidateId } } } },
+        select: { id: true },
+      });
       if (!requirement) return NextResponse.json({ error: "Job requirement not found" }, { status: 404 });
     }
     const evidence = await prisma.candidateEvidence.create({ data: { organizationId, candidateId, createdById: access.user.id, ...input }, select: evidenceSelect });
