@@ -10,4 +10,8 @@ describe("validateResumeFile", () => {
   it("rejects unsupported types", () => {
     expect(() => validateResumeFile(new File(["text"], "resume.txt", { type: "text/plain" }))).toThrow(ResumeValidationError);
   });
+
+  it("rejects a misleading file extension", () => {
+    expect(() => validateResumeFile(new File(["pdf"], "resume.docx", { type: "application/pdf" }))).toThrow(ResumeValidationError);
+  });
 });

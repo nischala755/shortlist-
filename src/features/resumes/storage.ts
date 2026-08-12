@@ -22,6 +22,8 @@ export function validateResumeFile(file: File) {
   if (file.size === 0 || file.size > maxResumeSizeBytes) {
     throw new ResumeValidationError("Resume file must be between 1 byte and 10 MB");
   }
+  const extension = path.extname(file.name).toLowerCase();
+  if ((file.type === "application/pdf" && extension !== ".pdf") || (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" && extension !== ".docx")) throw new ResumeValidationError("Resume extension does not match its content type");
 }
 
 function storageRoot() {
