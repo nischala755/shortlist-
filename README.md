@@ -7,6 +7,7 @@ EvidenceHire is an evidence-driven recruitment and applicant-tracking API for th
 Implemented vertical slices include:
 
 - foundation, PostgreSQL data model, authentication, sessions, email verification, and password reset
+- responsive product landing page, authentication screens, and a server-protected workspace entry
 - organization isolation and role-based access control
 - jobs, requirements, candidates, applications, and stage history
 - secure PDF/DOCX resume upload, parsing, and persisted text
@@ -79,6 +80,8 @@ Route handlers are under `src/app/api`:
 - `/api/notifications` — current-user notification listing and read state
 - `/api/organizations/{organizationId}/analytics` — scoped aggregate reporting
 - `/api/organizations/{organizationId}/audit-logs` — authorized immutable event history
+
+Browser routes currently include the product landing page, registration, email verification, login, password recovery, and the protected `/dashboard` workspace entry. Recruiting workflow screens are being added as independently testable vertical slices over the existing APIs.
 
 Every organization-scoped route checks authentication, membership, permission, and resource ownership where applicable. Candidate portal routes additionally require a candidate membership and match the candidate profile to the authenticated email.
 
