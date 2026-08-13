@@ -58,5 +58,18 @@ describe("security controls", () => {
         RESEND_API_KEY: "test-key",
       }),
     ).toEqual([]);
+
+    expect(
+      productionConfigurationErrors({
+        APP_ENV: "production",
+        RENDER_EXTERNAL_URL: "https://evidencehire.onrender.com",
+        DATABASE_URL: "postgresql://db/app",
+        RESUME_STORAGE_DRIVER: "s3",
+        S3_BUCKET: "resumes",
+        EMAIL_PROVIDER: "resend",
+        EMAIL_FROM: "EvidenceHire <noreply@app.test>",
+        RESEND_API_KEY: "test-key",
+      }),
+    ).toEqual([]);
   });
 });

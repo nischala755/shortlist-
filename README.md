@@ -1,28 +1,100 @@
 # EvidenceHire
 
-EvidenceHire is an evidence-driven applicant tracking system. Hiring teams define job requirements, collect candidate evidence, review gaps, and record structured interviews while authorized people retain every hiring decision.
+> **Evidence before instinct. People before automation.**
 
-AI is deliberately narrow: it extracts and summarizes resume content, maps exact source quotes to requirements, identifies missing information, suggests evidence-seeking interview questions, and summarizes human-authored scorecards. It cannot hire or reject, change pipeline stages, bypass permissions, or create candidate evidence.
+[![CI](https://github.com/nischala755/shortlist-/actions/workflows/ci.yml/badge.svg)](https://github.com/nischala755/shortlist-/actions/workflows/ci.yml)
 
-## MVP capabilities
+EvidenceHire is a multi-tenant applicant tracking system built around one hard rule: a hiring decision should be traceable to job requirements and source-backed candidate evidence.
 
-- Account registration, verification, password reset, sessions, and device logout
-- Organization isolation and role-based access for admins, recruiters, hiring managers, interviewers, and candidates
-- Jobs and requirements, candidates, applications, and stage history
-- PDF/DOCX upload, parsing, grounded Mistral analysis and requirement mapping, candidate evidence, evidence matrix, and gap reports
-- Suggested interview follow-ups, interview scheduling, structured scorecards, feedback summaries, coding assessments, candidate portal, and offer responses
-- Notifications, analytics, immutable audit review, security controls, CI, smoke tests, and container deployment
+Hiring teams define what a role requires, move applications through an explicit pipeline, collect evidence from resumes, interviews, and assessments, and see what is supported—or still missing—before a person makes the decision.
 
-See [Architecture](docs/architecture.md), [Deployment](docs/deployment.md), [Demo and verification](docs/demo-and-verification.md), and [Roadmap completion](docs/roadmap-completion.md).
+## The product thesis
 
-## Requirements
+Most recruiting software stores activity. EvidenceHire organizes reasoning.
 
-- Node.js 22
-- npm
-- PostgreSQL 15 or newer
-- Docker only for container deployment
+For every application, the platform connects four domain records:
 
-## Local setup
+```text
+JobRequirement -> CandidateEvidence -> Application -> Human decision
+```
+
+AI can extract, summarize, map, and suggest. It cannot hire, reject, rank, move a candidate, send an offer, bypass authorization, or turn its own output into accepted evidence.
+
+| AI assists with | A human remains responsible for |
+| --- | --- |
+| Resume extraction and structured summaries | Verifying the source material |
+| Requirement-to-resume mapping | Recording accepted candidate evidence |
+| Evidence-gap discovery | Deciding what a gap means |
+| Evidence-seeking interview questions | Conducting and scoring the interview |
+| Structured scorecard summaries | Every pipeline and offer decision |
+
+## What is shipped
+
+- Secure registration, email verification, password reset, hashed sessions, and device logout
+- Organization isolation with Admin, Recruiter, Hiring Manager, Interviewer, and Candidate roles
+- Jobs, explicit requirements, candidates, applications, controlled stage transitions, and stage history
+- Private PDF/DOCX résumé upload, server-side parsing, grounded Mistral analysis, and exact source-span validation
+- Human-recorded candidate evidence, requirement-level evidence matrix, and deterministic gap reports
+- Grounded requirement mappings and evidence-seeking interview questions that remain temporary review aids
+- Interview scheduling with conflict detection, assigned interviewers, structured scorecards, and bounded feedback summaries
+- Coding assessments with candidate drafts and one-time submission; submitted code is stored, never executed
+- Candidate portal, offer drafting/sending/responding, notifications, organization analytics, and audit review
+- Same-origin mutation protection, nonce-based CSP, upload boundaries, rate limiting, health checks, CI, Docker, and release smoke tests
+
+## The evidence workflow
+
+```mermaid
+flowchart LR
+    R[Job requirements] --> A[Application]
+    C[Candidate resume] --> P[Parse and analyze]
+    P --> M[Grounded mapping]
+    M --> G[Visible evidence gaps]
+    G --> I[Structured interview]
+    I --> E[Human-reviewed evidence]
+    E --> X[Evidence matrix]
+    X --> H[Human decision]
+    M -. never writes evidence .-> E
+```
+
+The matrix reports coverage, not candidate quality. A missing record means “we do not yet have evidence,” not “reject this person.”
+
+## Trust boundaries
+
+- Every organization resource is scoped by membership, permission, and ownership.
+- Cross-organization lookups do not reveal whether another tenant's resource exists.
+- Candidate portal access requires both the Candidate role and an email matching the candidate record.
+- Resume files are validated by MIME type, extension, size, and server-generated storage key.
+- Model-proposed quotes are accepted only when they map to a contiguous source span; the stored excerpt always comes from the parsed résumé.
+- Model output never mutates applications, offers, scorecards, or accepted evidence.
+- Decision language is rejected from generated scorecard summaries.
+- Audit records expose high-value workflow events through a read-only review surface.
+
+Read the deeper design in [Architecture](docs/architecture.md).
+
+## Proving the MVP
+
+The release gate exercises the application as a system, not as a collection of disconnected screens:
+
+```bash
+npm run verify:release
+```
+
+It runs lint, TypeScript, route and domain tests, a production build, CSP hydration checks, migration status, a production dependency audit, and a database-backed journey across authentication, tenant isolation, RBAC, evidence, assessments, interviews, offers, notifications, analytics, and audit logs.
+
+Current repository shape:
+
+| Proof point | Count |
+| --- | ---: |
+| Forward-only database migrations | 23 |
+| Scoped API route handlers | 50 |
+| Unit, route, integration, and UI test files | 91 |
+| Roadmap slices represented in the MVP | 26 |
+
+See [Demo and verification](docs/demo-and-verification.md) for the judge flow and deliberate failure checks.
+
+## Run locally
+
+Requirements: Node.js 22, npm, and PostgreSQL 15 or newer.
 
 ```powershell
 Copy-Item .env.example .env
@@ -32,53 +104,52 @@ npm run db:migrate
 npm run dev
 ```
 
-Set `DATABASE_URL` in `.env`:
+At minimum, set the local database URL in `.env`:
 
 ```text
-postgresql://evidencehire_app:your-password@localhost:5432/evidencehire?schema=public
+DATABASE_URL=postgresql://evidencehire_app:your-password@localhost:5432/evidencehire?schema=public
 ```
 
-Development defaults to console email and filesystem resume storage. `MISTRAL_API_KEY` is optional; all non-AI workflows work without it. Never commit `.env` or candidate files.
+Development uses console email and local résumé storage. Set `MISTRAL_API_KEY` to enable AI workflows. Never commit `.env`, candidate files, or provider credentials.
 
 Health endpoints:
 
-- `GET /api/health` checks the web process.
-- `GET /api/health/database` checks database readiness.
+- `GET /api/health` — process liveness
+- `GET /api/health/database` — PostgreSQL readiness
 
-## Verification
+## Deploy free
 
-```bash
-npm run verify
-npm run test:coverage
-npm run verify:release
+The included [Render Blueprint](render.yaml) deploys the Docker application and gives it a public HTTPS `onrender.com` URL. The recommended demo stack is:
+
+| Concern | Service |
+| --- | --- |
+| Application | Render Free web service |
+| PostgreSQL | Neon Free |
+| Private résumé objects | Cloudflare R2 Standard free tier |
+| Transactional email | Resend Free |
+| Grounded model calls | Mistral API |
+
+Provision the database, bucket, email sender, and rotated Mistral key first; apply migrations; then create the Render Blueprint. Follow the exact values and validation steps in [Deployment](docs/deployment.md).
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nischala755/shortlist-)
+
+Render Free services sleep after inactivity, so allow roughly a minute for the first request after a cold start. The database and résumé objects remain durable because they live outside Render's ephemeral filesystem.
+
+## Repository guide
+
+```text
+src/app/          pages and scoped HTTP routes
+src/components/   hiring-team and candidate workspaces
+src/features/     domain rules, validation, reports, and provider boundaries
+prisma/           relational model and forward-only migrations
+scripts/          release checks, production startup, and smoke journeys
+docs/             architecture, deployment, roadmap, and demo evidence
 ```
 
-`verify:release` runs lint, type checking, the complete automated suite, production build, a nonce-aware browser render check, migration status, dependency audit, and a database-backed smoke journey. It requires an available test database and briefly starts the app on ports `3111` and `3112`.
+Contributions should preserve domain ownership and authorization boundaries instead of hiding them behind generic CRUD abstractions. See [Contributing](CONTRIBUTING.md).
 
-## Production services
+## Status
 
-Production fails fast unless these boundaries are configured:
+The full MVP roadmap is implemented and locally release-verified. A deployment is considered ready only after both public health endpoints pass and the deployed environment completes one real email delivery, one private résumé upload/parse, one grounded analysis, and the documented judge journey.
 
-- HTTPS `APP_URL`
-- managed PostgreSQL `DATABASE_URL`
-- private S3-compatible resume bucket
-- Resend sender and API key
-
-Check configuration with `npm run check:production`. Run database migrations as a release step before starting the application. Detailed commands and rollback guidance are in [docs/deployment.md](docs/deployment.md).
-
-## Important safety boundaries
-
-- Session and one-time tokens are stored as hashes.
-- Every organization route checks membership, permission, and resource ownership.
-- Candidate portal access is bound to a candidate-role membership and matching email.
-- Resume size, MIME type, extension, and storage keys are validated.
-- AI evidence quotes must occur verbatim in parsed resume text.
-- AI requirement mappings and scorecard summaries are transient review aids and reject decision language.
-- Coding submissions are stored as text and never executed.
-- Only humans move applications or send/respond to offers.
-
-Report security issues privately to the maintainers. Do not include credentials or candidate data in public issues.
-
-## Development discipline
-
-Keep changes in independently testable vertical slices. Each change needs a domain purpose, authorization boundary, validation and error cases, focused tests, a passing release gate, and a commit message that names the milestone. Do not rewrite applied migrations.
+Security issues should be reported privately to the maintainers. Do not place credentials or candidate data in public issues.

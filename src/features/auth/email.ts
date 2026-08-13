@@ -34,7 +34,7 @@ async function deliver(email: string, subject: string, text: string) {
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const baseUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const baseUrl = process.env.APP_URL ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000";
   await deliver(
     email,
     "Verify your EvidenceHire email",
@@ -43,7 +43,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const baseUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const baseUrl = process.env.APP_URL ?? process.env.RENDER_EXTERNAL_URL ?? "http://localhost:3000";
   await deliver(
     email,
     "Reset your EvidenceHire password",

@@ -40,7 +40,7 @@ Role policy is centralized in `src/features/organizations/access.ts`:
 
 ## AI boundary
 
-Resume text and job requirements are treated as untrusted content, not model instructions. The model receives fixed extraction and assistance schemas with zero-temperature requests. Responses must match those schemas, requirement identifiers must belong to the scoped application, and every evidence quote must be an exact substring of parsed text. Suggested mappings and interview questions are transient and never become evidence automatically. Provider failure leaves the human workflow available and does not change applications, evidence, or offers.
+Resume text and job requirements are treated as untrusted content, not model instructions. The model receives fixed extraction and assistance schemas with zero-temperature requests. Responses must match those schemas, requirement identifiers must belong to the scoped application, and every proposed quote must map to a contiguous sequence of source words. The application stores the exact span from parsed text, never model-authored wording. Suggested mappings and interview questions are transient and never become evidence automatically. Provider failure leaves the human workflow available and does not change applications, evidence, or offers.
 
 Interview feedback remains the interviewer's structured scorecard. AI may produce a transient summary and follow-up questions from that scorecard, but validation rejects hiring/rejection/ranking language. Evidence-gap detection is deterministic. Coding answers are never executed. These boundaries prevent an AI response from becoming a hiring action.
 

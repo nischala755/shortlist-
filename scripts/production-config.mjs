@@ -1,7 +1,8 @@
 export function productionConfigurationErrors(env = process.env) {
   const errors = [];
+  const appUrl = env.APP_URL ?? env.RENDER_EXTERNAL_URL;
   if (env.APP_ENV !== "production") errors.push("APP_ENV must be production");
-  if (!env.APP_URL?.startsWith("https://")) errors.push("APP_URL must use HTTPS");
+  if (!appUrl?.startsWith("https://")) errors.push("APP_URL must use HTTPS");
   if (
     !env.DATABASE_URL?.startsWith("postgresql://") &&
     !env.DATABASE_URL?.startsWith("postgres://")

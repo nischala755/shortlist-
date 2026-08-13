@@ -42,6 +42,24 @@ describe("authentication email delivery", () => {
     );
   });
 
+  it("uses Render's public URL when APP_URL is not set", async () => {
+    delete process.env.APP_URL;
+    process.env.APP_ENV = "production";
+    process.env.RENDER_EXTERNAL_URL = "https://evidencehire.onrender.com";
+    process.env.EMAIL_PROVIDER = "resend";
+    process.env.EMAIL_FROM = "EvidenceHire <noreply@example.com>";
+    process.env.RESEND_API_KEY = "secret-key";
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
+    await sendVerificationEmail("person@example.com", "token");
+
+    expect(fetchMock.mock.calls[0][1]?.body).toContain(
+      "https://evidencehire.onrender.com/verify-email?token=token",
+    );
+  });
+
   it("fails closed when production email is not configured", async () => {
     process.env.APP_ENV = "production";
     process.env.EMAIL_PROVIDER = "console";
