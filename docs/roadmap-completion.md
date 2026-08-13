@@ -6,7 +6,7 @@ All 26 planned slices have an implemented MVP path. “Complete” here means th
 | --- | --- | --- |
 | 01 Foundation | Next.js foundation, health, logging | `ba90654`, `e027af5`, `1981b08` |
 | 02 Database model | PostgreSQL/Prisma domain and migrations | `8eec283` through `9f7d0f6` |
-| 03 Authentication | Registration, verification, login, sessions, reset | `6fae5dc` through `9c1170c` |
+| 03 Authentication | Registration, verification/resend, login, sessions, reset | `6fae5dc` through `9c1170c`, `16275b1` |
 | 04 Organization isolation | Membership-scoped access | `4c67fc2`, `4808f3b` |
 | 05 RBAC | Central role permissions | `40ee5d5` |
 | 06 Job management | Jobs, requirements, lifecycle | `5348a46`, `7586aa7` |
@@ -14,11 +14,11 @@ All 26 planned slices have an implemented MVP path. “Complete” here means th
 | 08 Application pipeline | Applications, transitions, history | `84b7ebb`, `8f52a4a` |
 | 09 Resume upload | Validated PDF/DOCX metadata and bytes | `193bb1f`, `225e25a` |
 | 10 Resume parsing | PDF/DOCX text persistence | `a14d42e`, `610ee23` |
-| 11 AI resume analysis | Grounded Mistral extraction | `298ba51`, `c2a26f1` |
+| 11 AI resume analysis | Grounded Mistral extraction, requirement mapping, questions | `298ba51`, `c2a26f1`, `17d6d45` |
 | 12 Candidate evidence | Human-recorded evidence model | `21ac07c` |
 | 13 Evidence Matrix | Requirement-to-evidence report | `4eadeae` |
 | 14 Interview scheduling | Scoped scheduling lifecycle | `b706ca8` |
-| 15 Interview scorecards | Structured interviewer feedback | `1bf837c` |
+| 15 Interview scorecards | Structured interviewer feedback and transient AI summary | `1bf837c`, `17d6d45` |
 | 16 Evidence-gap detection | Deterministic missing coverage | `fead7a8` |
 | 17 Coding assessments | Authoring and safe text answers | `33b26fb` |
 | 18 Candidate portal | Owned applications and submissions | `0806802`, `99e46fe` |
@@ -26,8 +26,8 @@ All 26 planned slices have an implemented MVP path. “Complete” here means th
 | 20 Notifications | User-scoped in-app notifications | `18f5137`, `19c5c37` |
 | 21 Analytics | Organization-scoped reporting | `f1b1e9b`, `09538c2` |
 | 22 Audit logs | Immutable event review workspace | `1d471e1`, `c8253c2` |
-| 23 Security hardening | Request, upload, headers, config controls | `581b4a1`, `2fcb427` |
-| 24 Testing | Coverage and repeatable release smoke | `c224621`, `0bcbd2a` |
+| 23 Security hardening | Request, upload, nonce-aware headers, config controls | `581b4a1`, `2fcb427`, `16c137e` |
+| 24 Testing | Coverage, production browser check, full release smoke | `c224621`, `0bcbd2a`, `16c137e` |
 | 25 Deployment | CI, S3, email, Docker targets | `38ebfe6`, `225e25a` |
 | 26 Documentation | Operations, architecture, demo, traceability | this document |
 

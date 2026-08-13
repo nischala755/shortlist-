@@ -40,9 +40,9 @@ Role policy is centralized in `src/features/organizations/access.ts`:
 
 ## AI boundary
 
-Resume text is treated as untrusted content, not model instructions. The model receives a fixed extraction schema and zero-temperature request. Responses must match that schema, and every evidence quote must be an exact substring of parsed text before persistence. Provider failure leaves the human workflow available and does not change applications, evidence, or offers.
+Resume text and job requirements are treated as untrusted content, not model instructions. The model receives fixed extraction and assistance schemas with zero-temperature requests. Responses must match those schemas, requirement identifiers must belong to the scoped application, and every evidence quote must be an exact substring of parsed text. Suggested mappings and interview questions are transient and never become evidence automatically. Provider failure leaves the human workflow available and does not change applications, evidence, or offers.
 
-Interview feedback remains the interviewer's structured scorecard. Evidence-gap detection is deterministic. Coding answers are never executed. These boundaries prevent an AI response from becoming a hiring action.
+Interview feedback remains the interviewer's structured scorecard. AI may produce a transient summary and follow-up questions from that scorecard, but validation rejects hiring/rejection/ranking language. Evidence-gap detection is deterministic. Coding answers are never executed. These boundaries prevent an AI response from becoming a hiring action.
 
 ## Operational design
 
@@ -50,4 +50,5 @@ Interview feedback remains the interviewer's structured scorecard. Evidence-gap 
 - Schema changes are forward Prisma migrations executed before application rollout.
 - Audit records capture high-value workflow events and are read-only through the API.
 - Security headers and mutation checks are enforced in `src/proxy.ts`.
+- A per-request CSP nonce is attached to Next.js scripts; the root is dynamically rendered so hydration works under the strict policy.
 - The current rate limiter is process-local and suitable for a single MVP instance. Multiple replicas require a shared limiter at the edge or in Redis.

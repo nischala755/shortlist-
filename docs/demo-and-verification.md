@@ -8,12 +8,12 @@ Use a disposable PostgreSQL database:
 npm run verify:release
 ```
 
-The gate checks lint, TypeScript, all unit and route tests, production compilation, migration status, production dependency vulnerabilities, and a smoke journey. The smoke journey creates temporary users and an organization, proves cross-organization denial and cross-site mutation rejection, moves one application through the pipeline, checks analytics and audit events, then removes its data.
+The gate checks lint, TypeScript, all unit and route tests, production compilation, CSP nonce rendering, migration status, production dependency vulnerabilities, and a smoke journey. The smoke journey creates temporary admin, candidate, and outsider users; proves isolation and RBAC; exercises evidence, assessment, interview, scorecard, offer, notification, analytics, and audit workflows; then removes its data.
 
 Expected smoke summary resembles:
 
 ```json
-{"status":"passed","isolation":true,"crossSiteProtection":true,"applicationLifecycle":true,"analytics":true,"auditEvents":4}
+{"status":"passed","authentication":true,"isolation":true,"rbac":true,"evidenceMatrix":true,"assessmentPortal":true,"interviewScorecard":true,"offerPortal":true,"notifications":true,"auditEvents":6}
 ```
 
 ## Judge demo
@@ -23,15 +23,15 @@ Prepare two verified accounts: one admin/recruiter and one candidate whose email
 1. Create an organization and a draft job with three concrete requirements.
 2. Publish the job, create the candidate, and add an application.
 3. Upload a small PDF or DOCX resume and parse it.
-4. If Mistral is configured, run analysis and point out that source quotes are validated against resume text.
-5. Add human-reviewed evidence and open the evidence matrix. Show covered and missing requirements.
-6. Schedule an interview and submit a structured scorecard as the assigned interviewer.
+4. If Mistral is configured, run resume analysis and grounded requirement assistance. Point out exact-quote validation and the fact that suggestions are not persisted as evidence.
+5. Review the suggested follow-up questions, add human-reviewed evidence, and open the evidence matrix. Show covered and missing requirements.
+6. Schedule an interview, submit a structured scorecard as the assigned interviewer, and generate a transient feedback summary.
 7. Create and assign a coding assessment. In the candidate portal, start it, save a draft, and submit once. Explain that code is stored but never executed.
 8. Draft and send an offer, then respond through the candidate portal.
 9. Show notifications, organization analytics, and the audit review page.
 10. Demonstrate that the second organization/user cannot access the first organization's URL.
 
-Do not claim automatic interview-question generation or AI feedback summarization during the demo; those are not implemented in this MVP. The grounded resume analysis and deterministic evidence-gap report are the completed AI/evidence features.
+Do not present AI mappings, questions, or feedback summaries as facts or decisions. The reviewer must verify source material, and only an authorized human can record evidence or move the application.
 
 ## Manual failure checks
 

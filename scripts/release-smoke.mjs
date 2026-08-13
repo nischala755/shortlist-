@@ -19,7 +19,7 @@ if (!databaseUrl) throw new Error("DATABASE_URL is required for release smoke te
 const pool = new pg.Pool({ connectionString: databaseUrl });
 const server = spawn(
   process.execPath,
-  ["node_modules/next/dist/bin/next", "dev", "-p", port],
+  ["node_modules/next/dist/bin/next", "start", "-p", port],
   { stdio: "ignore" },
 );
 const cookies = new Map();

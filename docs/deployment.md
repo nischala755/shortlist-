@@ -52,7 +52,7 @@ Do not run development migrations in production. Do not start new application re
 4. Build immutable migration and application images.
 5. Run the migration image once.
 6. Deploy one application instance and check both health endpoints.
-7. Exercise login, organization access, resume upload/parse, and one pipeline transition.
+7. Exercise login, organization access, resume upload/parse, one pipeline transition, and browser hydration under the CSP nonce.
 8. Scale only after readiness is healthy.
 
 ## Rollback
@@ -65,3 +65,4 @@ Application rollback uses the previous image. Prisma migrations in this reposito
 - AI analysis requires a valid `MISTRAL_API_KEY`; provider errors do not block normal ATS workflows.
 - The process-local rate limiter does not coordinate multiple replicas. Put distributed rate limiting at the ingress before scaling horizontally.
 - Docker was not available on the development machine for the final local review; CI/build syntax and the Next standalone artifact were verified, but the image must be built once in the target registry before release.
+- Nonce-based CSP makes all pages dynamically rendered. Do not cache HTML across users or strip the `Content-Security-Policy` header at the CDN.

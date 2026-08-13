@@ -2,15 +2,15 @@
 
 EvidenceHire is an evidence-driven applicant tracking system. Hiring teams define job requirements, collect candidate evidence, review gaps, and record structured interviews while authorized people retain every hiring decision.
 
-AI is deliberately narrow: it extracts and summarizes resume content, maps exact source quotes, and identifies missing information. It cannot hire or reject, change pipeline stages, bypass permissions, or create candidate evidence.
+AI is deliberately narrow: it extracts and summarizes resume content, maps exact source quotes to requirements, identifies missing information, suggests evidence-seeking interview questions, and summarizes human-authored scorecards. It cannot hire or reject, change pipeline stages, bypass permissions, or create candidate evidence.
 
 ## MVP capabilities
 
 - Account registration, verification, password reset, sessions, and device logout
 - Organization isolation and role-based access for admins, recruiters, hiring managers, interviewers, and candidates
 - Jobs and requirements, candidates, applications, and stage history
-- PDF/DOCX upload, parsing, grounded Mistral analysis, candidate evidence, evidence matrix, and gap reports
-- Interview scheduling, structured scorecards, coding assessments, candidate portal, and offer responses
+- PDF/DOCX upload, parsing, grounded Mistral analysis and requirement mapping, candidate evidence, evidence matrix, and gap reports
+- Suggested interview follow-ups, interview scheduling, structured scorecards, feedback summaries, coding assessments, candidate portal, and offer responses
 - Notifications, analytics, immutable audit review, security controls, CI, smoke tests, and container deployment
 
 See [Architecture](docs/architecture.md), [Deployment](docs/deployment.md), [Demo and verification](docs/demo-and-verification.md), and [Roadmap completion](docs/roadmap-completion.md).
@@ -53,7 +53,7 @@ npm run test:coverage
 npm run verify:release
 ```
 
-`verify:release` runs lint, type checking, 242 automated tests, production build, migration status, dependency audit, and a database-backed smoke journey. It requires an available test database and briefly starts the app on port `3111` by default.
+`verify:release` runs lint, type checking, the complete automated suite, production build, a nonce-aware browser render check, migration status, dependency audit, and a database-backed smoke journey. It requires an available test database and briefly starts the app on ports `3111` and `3112`.
 
 ## Production services
 
@@ -73,6 +73,7 @@ Check configuration with `npm run check:production`. Run database migrations as 
 - Candidate portal access is bound to a candidate-role membership and matching email.
 - Resume size, MIME type, extension, and storage keys are validated.
 - AI evidence quotes must occur verbatim in parsed resume text.
+- AI requirement mappings and scorecard summaries are transient review aids and reject decision language.
 - Coding submissions are stored as text and never executed.
 - Only humans move applications or send/respond to offers.
 
