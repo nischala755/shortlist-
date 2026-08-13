@@ -33,6 +33,37 @@ export function VerifyEmailForm({ token }: { token: string }) {
   );
 }
 
+export function ResendVerificationForm() {
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/auth/verify-email/resend", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: form.get("email") }),
+      });
+      if (!response.ok) {
+        setMessage(await responseError(response));
+        return;
+      }
+      setMessage("If the account requires verification, a new link has been sent.");
+      event.currentTarget.reset();
+    } catch {
+      setMessage("The service is unavailable. Try again shortly.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <form className="form-stack resend-form" onSubmit={submit}><div className="form-divider"><span>Need a new link?</span></div><label>Account email<input name="email" type="email" autoComplete="email" required maxLength={254} /></label>{message && <p className="form-message success" role="status">{message}</p>}<button className="button secondary full" type="submit" disabled={pending}>{pending ? "Sending…" : "Resend verification email"}</button></form>;
+}
+
 export function ResetPasswordForm({ token }: { token: string }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);

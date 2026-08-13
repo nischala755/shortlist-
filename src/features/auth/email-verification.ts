@@ -23,6 +23,16 @@ export async function createEmailVerificationToken(userId: string, email: string
   await sendVerificationEmail(email, token);
 }
 
+export async function resendEmailVerification(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await getPrisma().user.findUnique({
+    where: { email: normalizedEmail },
+    select: { id: true, email: true, emailVerifiedAt: true },
+  });
+  if (!user || user.emailVerifiedAt) return;
+  await createEmailVerificationToken(user.id, user.email);
+}
+
 export async function verifyEmailToken(token: string) {
   const prisma = getPrisma();
   const verificationToken = await prisma.emailVerificationToken.findUnique({
