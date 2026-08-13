@@ -135,6 +135,19 @@ Provision the database, bucket, email sender, and rotated Mistral key first; app
 
 Render Free services sleep after inactivity, so allow roughly a minute for the first request after a cold start. The database and résumé objects remain durable because they live outside Render's ephemeral filesystem.
 
+### Email delivery on the hosted demo
+
+Production registration is intentionally fail-closed: an account is not usable until its verification message is delivered and the email address is confirmed.
+
+Resend's shared `onboarding@resend.dev` sender is restricted to the email address associated with the Resend account. It is useful for an initial deployment check, but it cannot deliver verification links to arbitrary judge or candidate addresses. Before an open demo:
+
+1. Add a domain you control in Resend and complete its DNS verification.
+2. Set Render's `EMAIL_FROM` to `EvidenceHire <noreply@your-verified-domain.example>`.
+3. Keep `EMAIL_PROVIDER=resend` and set a valid `RESEND_API_KEY`.
+4. Redeploy and complete one registration using an external recipient address.
+
+Until a sender domain is verified, use the Resend account owner's address for the registration demo. A `500` response during registration with another address usually means Resend rejected the recipient; check the Render logs and Resend delivery log. Full setup and validation steps are in [Deployment](docs/deployment.md#4-configure-resend).
+
 ## Repository guide
 
 ```text
