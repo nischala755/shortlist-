@@ -61,7 +61,7 @@ Resend's free plan currently includes 3,000 emails per month and 100 per day. Th
 ## 5. Create the Render Blueprint
 
 1. Sign in to Render and choose **New > Blueprint**.
-2. Connect `nischala755/shortlist-` and select `render.yaml`.
+2. Connect `nischala755/EvidenceHire` and select `render.yaml`.
 3. Choose the Free instance and enter every prompted secret.
 4. Use these values:
 

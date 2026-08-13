@@ -2,7 +2,7 @@
 
 > **Evidence before instinct. People before automation.**
 
-[![CI](https://github.com/nischala755/shortlist-/actions/workflows/ci.yml/badge.svg)](https://github.com/nischala755/shortlist-/actions/workflows/ci.yml)
+[![CI](https://github.com/nischala755/EvidenceHire/actions/workflows/ci.yml/badge.svg)](https://github.com/nischala755/EvidenceHire/actions/workflows/ci.yml)
 
 EvidenceHire is a multi-tenant applicant tracking system built around one hard rule: a hiring decision should be traceable to job requirements and source-backed candidate evidence.
 
@@ -131,7 +131,7 @@ The included [Render Blueprint](render.yaml) deploys the Docker application and 
 
 Provision the database, bucket, email sender, and rotated Mistral key first; apply migrations; then create the Render Blueprint. Follow the exact values and validation steps in [Deployment](docs/deployment.md).
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nischala755/shortlist-)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nischala755/EvidenceHire)
 
 Render Free services sleep after inactivity, so allow roughly a minute for the first request after a cold start. The database and résumé objects remain durable because they live outside Render's ephemeral filesystem.
 
