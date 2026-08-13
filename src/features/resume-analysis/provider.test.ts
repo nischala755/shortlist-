@@ -17,6 +17,40 @@ describe("resume analysis provider", () => {
     expect(() => validateResumeAnalysis({ summary: "Engineer", skills: [], experienceHighlights: [], education: [], missingInformation: [], evidenceQuotes: ["Python"] }, "TypeScript")).toThrow(ResumeAnalysisProviderError);
   });
 
+  it("returns the exact source excerpt when PDF layout changes only whitespace", () => {
+    const sourceText = "Built APIs with TypeScript\nand PostgreSQL.";
+    const analysis = validateResumeAnalysis(
+      {
+        summary: "Engineer",
+        skills: ["TypeScript", "PostgreSQL"],
+        experienceHighlights: [],
+        education: [],
+        missingInformation: [],
+        evidenceQuotes: ["Built APIs with TypeScript and PostgreSQL."],
+      },
+      sourceText,
+    );
+
+    expect(analysis.evidenceQuotes).toEqual([sourceText]);
+  });
+
+  it("maps punctuation and casing differences back to exact source words", () => {
+    const sourceText = "Designed TypeScript APIs — deployed on AWS.";
+    const analysis = validateResumeAnalysis(
+      {
+        summary: "Engineer",
+        skills: ["TypeScript", "AWS"],
+        experienceHighlights: [],
+        education: [],
+        missingInformation: [],
+        evidenceQuotes: ["DESIGNED TYPESCRIPT APIS, DEPLOYED ON AWS"],
+      },
+      sourceText,
+    );
+
+    expect(analysis.evidenceQuotes).toEqual(["Designed TypeScript APIs — deployed on AWS"]);
+  });
+
   it("requires provider configuration", async () => {
     vi.stubEnv("MISTRAL_API_KEY", "");
     await expect(analyzeResumeWithMistral("resume")).rejects.toThrow("MISTRAL_API_KEY is not configured");

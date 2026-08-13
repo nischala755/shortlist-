@@ -23,7 +23,7 @@ export async function requestMistralJson(system: string, user: string) {
       body: JSON.stringify({
         model,
         temperature: 0,
-        max_tokens: 1600,
+        max_tokens: 3000,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system },
